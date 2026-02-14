@@ -1,10 +1,12 @@
 """
 Download and filter OpenFoodFacts products from HuggingFace dataset.
-Saves a filtered catalog of ~2000 products to backend/data/catalog.json.
+Saves a filtered catalog of products to backend/data/catalog.json.
+Stores ALL fields from the dataset — the UI selectively displays what it needs.
 """
 
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,8 +15,7 @@ from datasets import load_dataset
 
 
 OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json")
-TARGET_COUNT = 100_000
-MAX_SCAN = int(TARGET_COUNT * 1.5)
+TARGET_COUNT = 10_000
 
 
 def _to_str(val) -> str:
@@ -40,89 +41,8 @@ def _to_str(val) -> str:
 
 def _clean_text(text: str) -> str:
     """Strip HTML tags and clean up text."""
-    import re
-    text = re.sub(r'<[^>]+>', '', text)  # remove HTML like <span class="allergen">
+    text = re.sub(r'<[^>]+>', '', text)
     return text.strip()
-
-
-def extract_product(row: dict) -> dict | None:
-    product_name = _to_str(row.get("product_name"))
-    categories = _to_str(row.get("categories"))
-    nutriments = row.get("nutriments") or {}
-
-    if not product_name.strip():
-        return None
-
-    # Parse nutriments if it's a string
-    if isinstance(nutriments, str):
-        try:
-            nutriments = json.loads(nutriments)
-        except (json.JSONDecodeError, TypeError):
-            nutriments = {}
-
-    if not isinstance(nutriments, dict):
-        nutriments = {}
-
-    code = str(row.get("code", "")).strip()
-    if not code:
-        return None
-
-    ecoscore_grade = row.get("ecoscore_grade") or None
-    ecoscore_score = row.get("ecoscore_score")
-    if ecoscore_score is not None:
-        try:
-            ecoscore_score = int(float(ecoscore_score))
-        except (ValueError, TypeError):
-            ecoscore_score = None
-
-    # Normalize ecoscore_grade
-    if ecoscore_grade and ecoscore_grade.lower() not in ("a", "b", "c", "d", "e"):
-        ecoscore_grade = None
-    elif ecoscore_grade:
-        ecoscore_grade = ecoscore_grade.lower()
-
-    categories_tags = row.get("categories_tags") or []
-    if isinstance(categories_tags, str):
-        categories_tags = [t.strip() for t in categories_tags.split(",") if t.strip()]
-
-    packaging_tags = row.get("packaging_tags") or []
-    if isinstance(packaging_tags, str):
-        packaging_tags = [t.strip() for t in packaging_tags.split(",") if t.strip()]
-
-    labels_tags = row.get("labels_tags") or []
-    if isinstance(labels_tags, str):
-        labels_tags = [t.strip() for t in labels_tags.split(",") if t.strip()]
-
-    palm_oil_count = row.get("ingredients_from_palm_oil_n")
-    try:
-        palm_oil_count = int(palm_oil_count) if palm_oil_count is not None else 0
-    except (ValueError, TypeError):
-        palm_oil_count = 0
-
-    nutrition = {
-        "energy-kcal_100g": _safe_float(nutriments.get("energy-kcal_100g")),
-        "sugars_100g": _safe_float(nutriments.get("sugars_100g")),
-        "fat_100g": _safe_float(nutriments.get("fat_100g")),
-        "saturated-fat_100g": _safe_float(nutriments.get("saturated-fat_100g")),
-        "proteins_100g": _safe_float(nutriments.get("proteins_100g")),
-        "salt_100g": _safe_float(nutriments.get("salt_100g")),
-    }
-
-    return {
-        "code": code,
-        "product_name": product_name.strip(),
-        "brands": _to_str(row.get("brands")).strip(),
-        "categories": categories.strip(),
-        "categories_tags": categories_tags,
-        "ecoscore_grade": ecoscore_grade,
-        "ecoscore_score": ecoscore_score,
-        "packaging_tags": packaging_tags,
-        "labels_tags": labels_tags,
-        "ingredients_text": _to_str(row.get("ingredients_text")).strip(),
-        "ingredients_from_palm_oil_n": palm_oil_count,
-        "nutriments": nutrition,
-        "image_front_url": row.get("image_front_url") or row.get("image_url") or None,
-    }
 
 
 def _safe_float(val) -> float | None:
@@ -134,18 +54,212 @@ def _safe_float(val) -> float | None:
         return None
 
 
+def _safe_int(val) -> int | None:
+    if val is None:
+        return None
+    try:
+        return int(float(val))
+    except (ValueError, TypeError):
+        return None
+
+
+def _normalize_list(val) -> list:
+    """Normalize a value that should be a list of strings."""
+    if val is None:
+        return []
+    if isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        return [t.strip() for t in val.split(",") if t.strip()]
+    return []
+
+
+def _serialize_value(val):
+    """Make a value JSON-serializable for storage."""
+    if val is None:
+        return None
+    if isinstance(val, (str, int, float, bool)):
+        return val
+    if isinstance(val, list):
+        return val
+    if isinstance(val, dict):
+        return val
+    return str(val)
+
+
+def extract_product(row: dict) -> dict | None:
+    """Extract ALL fields from a dataset row, keeping everything available."""
+    product_name = _to_str(row.get("product_name"))
+    code = str(row.get("code", "")).strip()
+
+    if not product_name.strip() or not code:
+        return None
+
+    # Normalize ecoscore_grade
+    ecoscore_grade = row.get("ecoscore_grade") or None
+    if ecoscore_grade and ecoscore_grade.lower() not in ("a", "b", "c", "d", "e"):
+        ecoscore_grade = None
+    elif ecoscore_grade:
+        ecoscore_grade = ecoscore_grade.lower()
+
+    # Parse nutriments
+    nutriments = row.get("nutriments") or {}
+    if isinstance(nutriments, str):
+        try:
+            nutriments = json.loads(nutriments)
+        except (json.JSONDecodeError, TypeError):
+            nutriments = {}
+    if not isinstance(nutriments, dict):
+        nutriments = {}
+
+    # Build product dict with ALL available fields
+    product = {
+        # --- Core identifiers ---
+        "code": code,
+        "product_name": product_name.strip(),
+        "generic_name": _to_str(row.get("generic_name")).strip(),
+        "brands": _to_str(row.get("brands")).strip(),
+        "brands_tags": _normalize_list(row.get("brands_tags")),
+        "categories": _to_str(row.get("categories")).strip(),
+        "categories_tags": _normalize_list(row.get("categories_tags")),
+        "categories_properties": _serialize_value(row.get("categories_properties")),
+        "link": row.get("link") or None,
+        "lang": row.get("lang") or None,
+        "languages_tags": _normalize_list(row.get("languages_tags")),
+
+        # --- Ingredients ---
+        "ingredients": _serialize_value(row.get("ingredients")),
+        "ingredients_text": _to_str(row.get("ingredients_text")).strip(),
+        "ingredients_tags": _normalize_list(row.get("ingredients_tags")),
+        "ingredients_original_tags": _normalize_list(row.get("ingredients_original_tags")),
+        "ingredients_n": _safe_int(row.get("ingredients_n")),
+        "ingredients_analysis_tags": _normalize_list(row.get("ingredients_analysis_tags")),
+        "ingredients_percent_analysis": _safe_int(row.get("ingredients_percent_analysis")),
+        "ingredients_with_specified_percent_n": _safe_int(row.get("ingredients_with_specified_percent_n")),
+        "ingredients_with_unspecified_percent_n": _safe_int(row.get("ingredients_with_unspecified_percent_n")),
+        "ingredients_without_ciqual_codes_n": _safe_int(row.get("ingredients_without_ciqual_codes_n")),
+        "ingredients_without_ciqual_codes": _normalize_list(row.get("ingredients_without_ciqual_codes")),
+        "ingredients_from_palm_oil_n": _safe_int(row.get("ingredients_from_palm_oil_n")) or 0,
+        "known_ingredients_n": _safe_int(row.get("known_ingredients_n")),
+        "unknown_ingredients_n": _safe_int(row.get("unknown_ingredients_n")),
+
+        # --- Nutrition (full raw nutriments + parsed summary) ---
+        "nutriments": nutriments,
+        "nutrition_data_per": row.get("nutrition_data_per") or None,
+        "no_nutrition_data": row.get("no_nutrition_data") or None,
+        "nutrient_levels_tags": _normalize_list(row.get("nutrient_levels_tags")),
+        "nutriscore_grade": row.get("nutriscore_grade") or None,
+        "nutriscore_score": _safe_int(row.get("nutriscore_score")),
+        "nova_group": _safe_int(row.get("nova_group")),
+        "nova_groups": row.get("nova_groups") or None,
+        "nova_groups_tags": _normalize_list(row.get("nova_groups_tags")),
+
+        # --- Allergens & additives ---
+        "allergens_tags": _normalize_list(row.get("allergens_tags")),
+        "additives_n": _safe_int(row.get("additives_n")),
+        "additives_tags": _normalize_list(row.get("additives_tags")),
+        "new_additives_n": _safe_int(row.get("new_additives_n")),
+        "traces_tags": _normalize_list(row.get("traces_tags")),
+        "with_sweeteners": _safe_int(row.get("with_sweeteners")),
+        "with_non_nutritive_sweeteners": _safe_int(row.get("with_non_nutritive_sweeteners")),
+
+        # --- Labels & certifications ---
+        "labels": _to_str(row.get("labels")).strip(),
+        "labels_tags": _normalize_list(row.get("labels_tags")),
+
+        # --- Eco-score ---
+        "ecoscore_grade": ecoscore_grade,
+        "ecoscore_score": _safe_int(row.get("ecoscore_score")),
+        "ecoscore_data": _serialize_value(row.get("ecoscore_data")),
+        "ecoscore_tags": _normalize_list(row.get("ecoscore_tags")),
+
+        # --- Packaging ---
+        "packaging": _to_str(row.get("packaging")).strip(),
+        "packaging_text": _to_str(row.get("packaging_text")).strip(),
+        "packagings": _serialize_value(row.get("packagings")),
+        "packagings_complete": _safe_int(row.get("packagings_complete")),
+        "packaging_tags": _normalize_list(row.get("packaging_tags")),
+        "packaging_shapes_tags": _normalize_list(row.get("packaging_shapes_tags")),
+        "packaging_recycling_tags": _normalize_list(row.get("packaging_recycling_tags")),
+
+        # --- Geographic & origin ---
+        "countries_tags": _normalize_list(row.get("countries_tags")),
+        "main_countries_tags": _normalize_list(row.get("main_countries_tags")),
+        "origins": _to_str(row.get("origins")).strip(),
+        "origins_tags": _normalize_list(row.get("origins_tags")),
+        "manufacturing_places": _to_str(row.get("manufacturing_places")).strip(),
+        "manufacturing_places_tags": _normalize_list(row.get("manufacturing_places_tags")),
+        "purchase_places_tags": _normalize_list(row.get("purchase_places_tags")),
+        "cities_tags": _normalize_list(row.get("cities_tags")),
+        "emb_codes": row.get("emb_codes") or None,
+        "emb_codes_tags": _normalize_list(row.get("emb_codes_tags")),
+
+        # --- Images ---
+        "images": _serialize_value(row.get("images")),
+        "image_front_url": row.get("image_front_url") or row.get("image_url") or None,
+        "max_imgid": _safe_int(row.get("max_imgid")),
+        "last_image_t": _safe_int(row.get("last_image_t")),
+
+        # --- Quantity & serving ---
+        "quantity": _to_str(row.get("quantity")).strip(),
+        "product_quantity": _safe_float(row.get("product_quantity")),
+        "product_quantity_unit": row.get("product_quantity_unit") or None,
+        "serving_size": _to_str(row.get("serving_size")).strip(),
+        "serving_quantity": _safe_float(row.get("serving_quantity")),
+
+        # --- Completeness & data quality ---
+        "complete": _safe_int(row.get("complete")),
+        "completeness": _safe_float(row.get("completeness")),
+        "data_quality_errors_tags": _normalize_list(row.get("data_quality_errors_tags")),
+        "data_quality_warnings_tags": _normalize_list(row.get("data_quality_warnings_tags")),
+        "data_quality_info_tags": _normalize_list(row.get("data_quality_info_tags")),
+        "states_tags": _normalize_list(row.get("states_tags")),
+
+        # --- Stores & distribution ---
+        "stores": _to_str(row.get("stores")).strip(),
+        "stores_tags": _normalize_list(row.get("stores_tags")),
+        "compared_to_category": row.get("compared_to_category") or None,
+        "popularity_key": _safe_int(row.get("popularity_key")),
+        "popularity_tags": _normalize_list(row.get("popularity_tags")),
+        "scans_n": _safe_int(row.get("scans_n")),
+        "unique_scans_n": _safe_int(row.get("unique_scans_n")),
+
+        # --- Food classification ---
+        "food_groups_tags": _normalize_list(row.get("food_groups_tags")),
+        "ciqual_food_name_tags": _normalize_list(row.get("ciqual_food_name_tags")),
+        "minerals_tags": _normalize_list(row.get("minerals_tags")),
+        "vitamins_tags": _normalize_list(row.get("vitamins_tags")),
+        "nucleotides_tags": _normalize_list(row.get("nucleotides_tags")),
+        "misc_tags": _normalize_list(row.get("misc_tags")),
+        "data_sources_tags": _normalize_list(row.get("data_sources_tags")),
+
+        # --- Contributors & timestamps ---
+        "creator": row.get("creator") or None,
+        "created_t": _safe_int(row.get("created_t")),
+        "last_modified_t": _safe_int(row.get("last_modified_t")),
+        "last_modified_by": row.get("last_modified_by") or None,
+        "last_updated_t": _safe_int(row.get("last_updated_t")),
+        "owner": row.get("owner") or None,
+        "rev": _safe_int(row.get("rev")),
+        "obsolete": _safe_int(row.get("obsolete")),
+    }
+
+    return product
+
+
 def compute_completeness(product: dict) -> int:
     score = 0
-    if product["ecoscore_grade"]:
+    if product.get("ecoscore_grade"):
         score += 10
-    if product["image_front_url"]:
+    if product.get("image_front_url"):
         score += 3
-    if product["ingredients_text"]:
+    if product.get("ingredients_text"):
         score += 2
-    if product["brands"]:
+    if product.get("brands"):
         score += 1
-    n = product["nutriments"]
-    score += sum(1 for v in n.values() if v is not None)
+    n = product.get("nutriments") or {}
+    if isinstance(n, dict):
+        score += sum(1 for v in n.values() if v is not None)
     return score
 
 
@@ -180,15 +294,14 @@ def main():
 
         products.append(product)
 
-        # Stop after scanning MAX_SCAN rows from the dataset
-        if scanned >= MAX_SCAN:
+        # Stop after keeping TARGET_COUNT products
+        if len(products) >= TARGET_COUNT:
             break
 
     print(f"\nScanned {scanned} rows total, extracted {len(products)} valid products")
 
     # Sort by completeness (eco-score presence prioritized)
     products.sort(key=compute_completeness, reverse=True)
-    products = products[:TARGET_COUNT]
 
     # Save
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
