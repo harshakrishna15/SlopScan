@@ -35,6 +35,12 @@ export function saveScanHistory(product: Product, capturedImage: string, imageNa
   localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next));
 }
 
+export function deleteScanHistoryItem(id: string): void {
+  const current = getScanHistory();
+  const next = current.filter((item) => item.id !== id);
+  localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next));
+}
+
 export function clearScanHistory(): void {
   localStorage.removeItem(SCAN_HISTORY_KEY);
 }

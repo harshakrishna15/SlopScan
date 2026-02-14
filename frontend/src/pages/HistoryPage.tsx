@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Calendar } from 'lucide-react';
+import { Trash2, X, Calendar } from 'lucide-react';
 import EcoScoreBadge from '../components/EcoScoreBadge';
-import { clearScanHistory, getScanHistory } from '../lib/history';
+import { clearScanHistory, deleteScanHistoryItem, getScanHistory } from '../lib/history';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -11,6 +11,12 @@ export default function HistoryPage() {
 
   const handleClear = () => {
     clearScanHistory();
+    setVersion((v) => v + 1);
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    deleteScanHistoryItem(id);
     setVersion((v) => v + 1);
   };
 
@@ -38,15 +44,15 @@ export default function HistoryPage() {
                 <button
                   key={item.id}
                   onClick={() => navigate(`/product/${item.product_code}`)}
-                  className="surface-card flex items-start gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="surface-card group relative flex items-start gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <img
                     src={item.captured_image}
                     alt={item.captured_image_name || item.product_name}
-                    className="h-24 w-24 rounded-xl border border-[var(--line-soft)] object-cover"
+                    className="h-24 w-24 flex-shrink-0 rounded-xl border border-[var(--line-soft)] object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-[var(--ink-900)]">{item.product_name}</p>
+                    <p className="truncate pr-8 font-semibold text-[var(--ink-900)]">{item.product_name}</p>
                     {item.brands && <p className="truncate text-sm text-[var(--ink-500)]">{item.brands}</p>}
                     <div className="mt-2">
                       <EcoScoreBadge grade={item.ecoscore_grade} score={item.ecoscore_score} size="sm" />
@@ -56,6 +62,16 @@ export default function HistoryPage() {
                       {new Date(item.saved_at).toLocaleString()}
                     </p>
                   </div>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => handleDelete(e, item.id)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleDelete(e as unknown as React.MouseEvent, item.id); } }}
+                    className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-[var(--ink-400)] opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    title="Remove from history"
+                  >
+                    <X className="h-4 w-4" />
+                  </span>
                 </button>
               ))}
             </div>
