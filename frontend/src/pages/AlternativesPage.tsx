@@ -63,6 +63,7 @@ export default function AlternativesPage() {
                   ecoscore_grade={alt.ecoscore_grade}
                   confidence={alt.similarity_score}
                   image_url={alt.image_url}
+                  fullProduct={alt}
                 />
               ))}
             </div>

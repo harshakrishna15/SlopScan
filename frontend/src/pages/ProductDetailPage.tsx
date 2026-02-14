@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Leaf, AlertTriangle } from 'lucide-react';
-import { getProduct, getExplanation } from '../lib/api';
+import { getProduct, getExplanation, getExplanationFromProduct } from '../lib/api';
 import type { Product, ExplanationResponse } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EcoScoreBadge from '../components/EcoScoreBadge';
@@ -48,7 +48,12 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!code || !product) return;
 
-    getExplanation(code)
+    // Prefer POST with full product data to avoid wrong product_code lookups.
+    const request = product
+      ? getExplanationFromProduct(product)
+      : getExplanation(code);
+
+    request
       .then(setExplanation)
       .catch(() => {
         // Keep product/nutrition visible even if explanation fails.

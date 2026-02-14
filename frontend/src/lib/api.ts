@@ -36,10 +36,7 @@ export async function getRecommendationsFromProduct(product: Product): Promise<P
   return res.json();
 }
 
-export async function getExplanation(code: string): Promise<ExplanationResponse> {
-  const res = await fetch(`/api/explain/${encodeURIComponent(code)}`);
-  if (!res.ok) throw new Error(`Explanation failed: ${res.status}`);
-  const raw = await res.json();
+function _parseExplanation(raw: Record<string, unknown>): ExplanationResponse {
   return {
     nutrition_summary: typeof raw?.nutrition_summary === 'string' ? raw.nutrition_summary : 'No nutrition summary available.',
     eco_explanation: typeof raw?.eco_explanation === 'string' ? raw.eco_explanation : 'Eco explanation unavailable.',
@@ -48,4 +45,20 @@ export async function getExplanation(code: string): Promise<ExplanationResponse>
       : [],
     advice: typeof raw?.advice === 'string' ? raw.advice : 'No advice available.',
   };
+}
+
+export async function getExplanation(code: string): Promise<ExplanationResponse> {
+  const res = await fetch(`/api/explain/${encodeURIComponent(code)}`);
+  if (!res.ok) throw new Error(`Explanation failed: ${res.status}`);
+  return _parseExplanation(await res.json());
+}
+
+export async function getExplanationFromProduct(product: Product): Promise<ExplanationResponse> {
+  const res = await fetch('/api/explain', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(product),
+  });
+  if (!res.ok) throw new Error(`Explanation failed: ${res.status}`);
+  return _parseExplanation(await res.json());
 }
