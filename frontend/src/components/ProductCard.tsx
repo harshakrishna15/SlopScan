@@ -6,6 +6,7 @@ interface ProductCardProps {
   product_code: string;
   product_name: string;
   brands: string;
+  nutriscore_grade?: string | null;
   ecoscore_grade: string | null;
   confidence?: number;
   image_url?: string | null;
@@ -16,6 +17,7 @@ export default function ProductCard({
   product_code,
   product_name,
   brands,
+  nutriscore_grade,
   ecoscore_grade,
   confidence,
   image_url,
@@ -46,7 +48,16 @@ export default function ProductCard({
           <p className="mt-1 text-xs font-medium text-[var(--ink-500)]">Match: {(confidence * 100).toFixed(0)}%</p>
         )}
       </div>
-      <EcoScoreBadge grade={ecoscore_grade} size="sm" />
+      <div className="flex flex-col items-end gap-1.5">
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-[var(--ink-400)]">Nutri</span>
+          <EcoScoreBadge grade={nutriscore_grade} size="sm" />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-[var(--ink-400)]">Eco</span>
+          <EcoScoreBadge grade={ecoscore_grade} size="sm" />
+        </div>
+      </div>
     </button>
   );
 }

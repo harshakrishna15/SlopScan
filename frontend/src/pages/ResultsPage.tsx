@@ -104,6 +104,7 @@ export default function ResultsPage() {
                 product_code={c.product_code}
                 product_name={c.product_name}
                 brands={c.brands}
+                nutriscore_grade={c.nutriscore_grade}
                 ecoscore_grade={c.ecoscore_grade}
                 confidence={c.confidence}
                 fullProduct={c}

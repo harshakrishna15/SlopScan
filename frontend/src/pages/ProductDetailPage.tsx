@@ -130,6 +130,11 @@ export default function ProductDetailPage() {
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
+          <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Nutri-Score</h2>
+          <EcoScoreBadge grade={product.nutriscore_grade} size="md" />
+        </section>
+
+        <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
           <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Eco-Score</h2>
           <EcoScoreBadge grade={product.ecoscore_grade} score={product.ecoscore_score} size="md" />
         </section>

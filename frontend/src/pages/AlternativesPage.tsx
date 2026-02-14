@@ -60,6 +60,7 @@ export default function AlternativesPage() {
                   product_code={alt.product_code}
                   product_name={alt.product_name}
                   brands={alt.brands}
+                  nutriscore_grade={alt.nutriscore_grade}
                   ecoscore_grade={alt.ecoscore_grade}
                   confidence={alt.similarity_score}
                   image_url={alt.image_url}
