@@ -1,6 +1,5 @@
 # ShelfScan — MVP Implementation Plan
 
-> **This document is a step-by-step build guide for Windsurf Cascade.**
 > Execute each step in order. Each step specifies exactly what to create, which files to modify, and what commands to run.
 
 ---
@@ -13,7 +12,7 @@
 
 - **Frontend**: React (Vite) + Tailwind CSS + shadcn/ui
 - **Backend**: Python FastAPI
-- **Product identification**: Gemini 2.0 Flash (Vision) — send photo, get product name guesses
+- **Product identification**: Gemini 3.0 Flash (Vision) — send photo, get product name guesses
 - **Embeddings**: Gemini `text-embedding-004` (768-dim) on product name strings
 - **Vector DB**: Actian VectorDB — stores product name embeddings + metadata
 - **Product data source**: OpenFoodFacts HuggingFace dataset (`openfoodfacts/product-database`)
@@ -26,7 +25,7 @@
 User photo
     │
     ▼
-Gemini Vision API (gemini-2.0-flash)
+Gemini Vision API (gemini-3.0-flash)
     │  "This looks like: Nutella, Nutella & Go, Generic hazelnut spread"
     ▼
 Gemini text-embedding-004
@@ -132,8 +131,9 @@ ACTIAN_PASSWORD=<password>
 ### 1.3 Create `backend/config.py`
 
 Load all env vars using `python-dotenv`. Export them as module-level constants. Define:
+
 - `GEMINI_API_KEY`
-- `GEMINI_MODEL = "gemini-2.0-flash"`
+- `GEMINI_MODEL = "gemini-3.0-flash"`
 - `GEMINI_EMBEDDING_MODEL = "models/text-embedding-004"`
 - `EMBEDDING_DIM = 768`
 - `CONFIDENCE_THRESHOLD = 0.75`
@@ -142,6 +142,7 @@ Load all env vars using `python-dotenv`. Export them as module-level constants. 
 ### 1.4 Create `backend/main.py`
 
 FastAPI app with:
+
 - CORS middleware allowing `http://localhost:5173` (Vite dev server)
 - Include routers: `identify`, `product`, `recommend`, `explain` under `/api` prefix
 - Health check endpoint: `GET /api/health`
@@ -162,6 +163,7 @@ Verify `http://localhost:8000/api/health` returns `{"status": "ok"}`.
 ### 2.1 Create `backend/scripts/build_catalog.py`
 
 This script:
+
 1. Downloads the OpenFoodFacts product database from HuggingFace: `openfoodfacts/product-database`
    - Use the `datasets` library: `from datasets import load_dataset`
    - Or download the parquet files directly
@@ -213,6 +215,7 @@ Verify `backend/data/catalog.json` exists and has ~2000 entries. Print summary s
 ### 3.1 Create `backend/scripts/generate_embeddings.py`
 
 This script:
+
 1. Loads `backend/data/catalog.json`
 2. For each product, creates an embedding input string:
    ```python
@@ -234,6 +237,7 @@ This script:
 ### 3.2 Create `backend/scripts/ingest_actian.py`
 
 This script:
+
 1. Connects to Actian VectorDB
 2. Creates the products table:
    ```sql
@@ -440,6 +444,7 @@ Set up Tailwind via the Vite plugin in `vite.config.ts`.
 Add `@import "tailwindcss";` to `src/index.css`.
 
 Add proxy to backend in `vite.config.ts`:
+
 ```ts
 server: {
   proxy: {
@@ -572,6 +577,7 @@ export async function getExplanation(code: string): Promise<ExplanationResponse>
 ### 9.1 Test with known products
 
 Test the full flow with these products (should be in the catalog):
+
 - Nutella
 - Coca-Cola
 - Oreos
@@ -603,19 +609,20 @@ For each: take a real photo → verify identification → verify nutrition data 
 
 ## API Quick Reference
 
-| Method | Endpoint | Input | Output |
-|--------|----------|-------|--------|
-| POST | `/api/identify` | `image` (multipart file) | `IdentifyResponse` |
-| GET | `/api/product/{code}` | — | `Product` |
-| GET | `/api/recommend/{code}` | — | `Product[]` |
-| GET | `/api/explain/{code}` | — | `ExplanationResponse` |
-| GET | `/api/health` | — | `{"status": "ok"}` |
+| Method | Endpoint                | Input                    | Output                |
+| ------ | ----------------------- | ------------------------ | --------------------- |
+| POST   | `/api/identify`         | `image` (multipart file) | `IdentifyResponse`    |
+| GET    | `/api/product/{code}`   | —                        | `Product`             |
+| GET    | `/api/recommend/{code}` | —                        | `Product[]`           |
+| GET    | `/api/explain/{code}`   | —                        | `ExplanationResponse` |
+| GET    | `/api/health`           | —                        | `{"status": "ok"}`    |
 
 ---
 
 ## Key Dependencies
 
 **Backend (Python)**:
+
 - `fastapi`, `uvicorn`, `python-multipart` — web framework
 - `google-generativeai` — Gemini Vision + embeddings + explanation
 - `httpx` — async HTTP client (OFF API fallback)
@@ -626,6 +633,7 @@ For each: take a real photo → verify identification → verify nutrition data 
 - `datasets` (HuggingFace) — for downloading OFF dataset
 
 **Frontend (TypeScript)**:
+
 - `react`, `react-dom`, `react-router-dom` — UI framework + routing
 - `react-webcam` — camera capture
 - `lucide-react` — icons
