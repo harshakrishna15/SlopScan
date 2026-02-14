@@ -30,7 +30,7 @@ def _parse_json_response(text: str) -> str:
     return text
 
 
-def _identify_sync(image_bytes: bytes) -> list[str]:
+def _identify_sync(image_bytes: bytes) -> dict:
     model = genai.GenerativeModel(GEMINI_MODEL)
     response = model.generate_content(
         [
@@ -40,9 +40,11 @@ def _identify_sync(image_bytes: bytes) -> list[str]:
             },
             (
                 "You are a food product identifier. Look at this photo of a food product package. "
-                "Return ONLY a JSON array of 3-5 possible product names, from most to least likely. "
-                'Include the brand name. Example: ["Nutella Hazelnut Spread", "Nutella & Go", "Generic Hazelnut Spread"] '
-                "Return ONLY the JSON array, no other text."
+                "Return a JSON object with two fields:\n"
+                "1. 'guesses': A JSON array of 3-5 possible product names (including brand), from most to least likely.\n"
+                "2. 'brand': The most likely brand name detected (e.g. 'Coca-Cola', 'Nestle').\n"
+                'Example: {"guesses": ["Nutella Hazelnut Spread", "Nutella & Go"], "brand": "Ferrero"}\n'
+                "Return ONLY the valid JSON object, no other text."
             ),
         ]
     )
@@ -52,14 +54,17 @@ def _identify_sync(image_bytes: bytes) -> list[str]:
     try:
         result = json.loads(text)
         if isinstance(result, list):
+            # Fallback for old prompt style if model ignores instruction
+            return {"guesses": result, "brand": None}
+        if isinstance(result, dict):
             return result
-        return []
+        return {"guesses": [], "brand": None}
     except json.JSONDecodeError:
         print(f"[Gemini parse error] Could not parse: {text[:500]}")
-        return []
+        return {"guesses": [], "brand": None}
 
 
-async def identify_product(image_bytes: bytes) -> list[str]:
+async def identify_product(image_bytes: bytes) -> dict:
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, _identify_sync, image_bytes)
 

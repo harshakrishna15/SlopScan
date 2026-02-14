@@ -14,7 +14,9 @@ async def identify(image: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Empty image file")
 
     try:
-        guesses = await gemini.identify_product(image_bytes)
+        gemini_result = await gemini.identify_product(image_bytes)
+        guesses = gemini_result.get("guesses", [])
+        gemini_brand = gemini_result.get("brand")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -30,6 +32,9 @@ async def identify(image: UploadFile = File(...)):
         }
 
     print(f"[identify] Gemini guesses: {guesses}")
+    if gemini_brand:
+        print(f"[identify] Gemini detected brand: {gemini_brand}")
+
     try:
         db_count = actian_client.count()
         print(f"[identify] Products in VectorDB: {db_count}")
@@ -68,6 +73,42 @@ async def identify(image: UploadFile = File(...)):
 
     if not all_results and search_errors:
         raise HTTPException(status_code=502, detail=f"Vector search error: {search_errors[0]}")
+
+    candidate_brands = set()
+    if gemini_brand:
+        candidate_brands.add(gemini_brand.lower())
+
+    for guess in guesses:
+        # Simple heuristic: first word is often the brand (e.g. "Nutella" in "Nutella Hazelnut Spread")
+        parts = guess.split()
+        if parts:
+            candidate_brands.add(parts[0].lower())
+        # Also add the full guess as a potential brand if it's short (e.g. "Nike")
+        candidate_brands.add(guess.lower())
+    
+    print(f"[identify] Candidate brands from Gemini: {candidate_brands}")
+
+    # Apply Brand Boost
+    for res in all_results:
+        brand_db = (res.get("brands") or "").lower()
+        product_name_db = (res.get("product_name") or "").lower()
+        
+        # Check if any candidate brand is in the DB brand field
+        boost = 0.0
+        for brand in candidate_brands:
+            # If the candidate brand (e.g. "ferrero") appears in the DB brand field
+            if brand in brand_db:
+                boost = 0.25 # Significant boost
+                break
+            # Fallback: if brand is effectively the start of product name
+            if product_name_db.startswith(brand + " "):
+                boost = 0.15
+                break
+        
+        if boost > 0:
+            original_score = res.get("similarity_score", 0)
+            res["similarity_score"] = min(original_score + boost, 1.0) # Cap at 1.0
+            print(f"  -> Boosted '{res.get('product_name')}' by {boost} (new score: {res['similarity_score']:.4f})")
 
     all_results.sort(key=lambda x: x.get("similarity_score", 0), reverse=True)
     candidates = all_results[:5]
