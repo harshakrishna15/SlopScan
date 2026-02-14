@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
             {product.image_url ? (
               <img src={product.image_url} alt={product.product_name} className="h-20 w-20 rounded-2xl border border-white/60 object-cover shadow-sm" />
             ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--line-soft)] bg-white text-3xl">P</div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-3xl">🛒</div>
             )}
             <div className="flex-1">
               <h1 className="hero-title text-3xl leading-tight text-[var(--ink-900)]">{product.product_name}</h1>

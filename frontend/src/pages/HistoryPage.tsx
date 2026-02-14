@@ -46,11 +46,17 @@ export default function HistoryPage() {
                   onClick={() => navigate(`/product/${item.product_code}`)}
                   className="surface-card group relative flex items-start gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <img
-                    src={item.captured_image || item.product_image_url || ''}
-                    alt={item.product_name}
-                    className="h-24 w-24 flex-shrink-0 rounded-xl border border-[var(--line-soft)] object-cover"
-                  />
+                  {item.product_image_url ? (
+                    <img
+                      src={item.product_image_url}
+                      alt={item.product_name}
+                      className="h-24 w-24 flex-shrink-0 rounded-xl border border-[var(--line-soft)] object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-3xl">
+                      🛒
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate pr-8 font-semibold text-[var(--ink-900)]">{item.product_name}</p>
                     {item.brands && <p className="truncate text-sm text-[var(--ink-500)]">{item.brands}</p>}
