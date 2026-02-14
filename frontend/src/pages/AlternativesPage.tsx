@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { getRecommendations } from '../lib/api';
+import { getRecommendations, getRecommendationsFromProduct } from '../lib/api';
 import type { Product } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProductCard from '../components/ProductCard';
@@ -9,17 +9,23 @@ import ProductCard from '../components/ProductCard';
 export default function AlternativesPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [alternatives, setAlternatives] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!code) return;
-    getRecommendations(code)
+    const stateProduct = (location.state as { product?: Product } | null)?.product;
+    const request = stateProduct
+      ? getRecommendationsFromProduct(stateProduct)
+      : getRecommendations(code);
+
+    request
       .then(setAlternatives)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [code]);
+  }, [code, location.state]);
 
   if (loading) {
     return (

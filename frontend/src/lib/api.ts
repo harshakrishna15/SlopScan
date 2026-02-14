@@ -20,6 +20,22 @@ export async function getRecommendations(code: string): Promise<Product[]> {
   return res.json();
 }
 
+export async function getRecommendationsFromProduct(product: Product): Promise<Product[]> {
+  const res = await fetch('/api/recommend', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      product_code: product.product_code,
+      product_name: product.product_name,
+      brands: product.brands,
+      categories: product.categories,
+      ecoscore_grade: product.ecoscore_grade,
+    }),
+  });
+  if (!res.ok) throw new Error(`Recommendations failed: ${res.status}`);
+  return res.json();
+}
+
 export async function getExplanation(code: string): Promise<ExplanationResponse> {
   const res = await fetch(`/api/explain/${encodeURIComponent(code)}`);
   if (!res.ok) throw new Error(`Explanation failed: ${res.status}`);

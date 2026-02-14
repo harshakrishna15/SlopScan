@@ -173,7 +173,7 @@ export default function ProductDetailPage() {
 
         <div className="flex justify-center">
           <button
-            onClick={() => navigate(`/alternatives/${code}`)}
+            onClick={() => navigate(`/alternatives/${code}`, { state: { product } })}
             className="ui-btn btn-primary fade-up w-full max-w-4xl py-3.5 text-base"
           >
             <Leaf className="h-5 w-5" />
