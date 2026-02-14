@@ -50,11 +50,9 @@ export default function ProductDetailPage() {
     if (!product || historySavedRef.current) return;
 
     const pendingSave = sessionStorage.getItem('pendingScanHistorySave');
-    const capturedImage = sessionStorage.getItem('capturedImage');
-    const capturedImageName = sessionStorage.getItem('capturedImageName') || 'capture.jpg';
 
-    if (pendingSave === '1' && capturedImage) {
-      saveScanHistory(product, capturedImage, capturedImageName);
+    if (pendingSave === '1') {
+      saveScanHistory(product);
       historySavedRef.current = true;
       sessionStorage.removeItem('pendingScanHistorySave');
       sessionStorage.removeItem('capturedImage');

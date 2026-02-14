@@ -16,13 +16,13 @@ export function getScanHistory(): ScanHistoryEntry[] {
   }
 }
 
-export function saveScanHistory(product: Product, capturedImage: string, imageName: string): void {
+export function saveScanHistory(product: Product): void {
   const current = getScanHistory();
   const entry: ScanHistoryEntry = {
     id: `${product.product_code}-${Date.now()}`,
     saved_at: new Date().toISOString(),
-    captured_image: capturedImage,
-    captured_image_name: imageName,
+    captured_image: '',
+    captured_image_name: '',
     product_code: product.product_code,
     product_name: product.product_name,
     brands: product.brands,
@@ -32,7 +32,14 @@ export function saveScanHistory(product: Product, capturedImage: string, imageNa
   };
 
   const next = [entry, ...current].slice(0, MAX_HISTORY_ITEMS);
-  localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next));
+  } catch {
+    // Over quota — trim and retry, or give up silently
+    try {
+      localStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next.slice(0, 10)));
+    } catch { /* noop */ }
+  }
 }
 
 export function deleteScanHistoryItem(id: string): void {

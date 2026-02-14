@@ -47,8 +47,8 @@ export default function HistoryPage() {
                   className="surface-card group relative flex items-start gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   <img
-                    src={item.captured_image}
-                    alt={item.captured_image_name || item.product_name}
+                    src={item.captured_image || item.product_image_url || ''}
+                    alt={item.product_name}
                     className="h-24 w-24 flex-shrink-0 rounded-xl border border-[var(--line-soft)] object-cover"
                   />
                   <div className="min-w-0 flex-1">
