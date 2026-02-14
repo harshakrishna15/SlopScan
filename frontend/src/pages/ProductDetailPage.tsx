@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Leaf, AlertTriangle } from 'lucide-react';
-import { getProduct, getExplanation } from '../lib/api';
+import { getProduct, getExplanation, getExplanationFromProduct } from '../lib/api';
 import type { Product, ExplanationResponse } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EcoScoreBadge from '../components/EcoScoreBadge';
@@ -48,7 +48,12 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!code || !product) return;
 
-    getExplanation(code)
+    // Prefer POST with full product data to avoid wrong product_code lookups.
+    const request = product
+      ? getExplanationFromProduct(product)
+      : getExplanation(code);
+
+    request
       .then(setExplanation)
       .catch(() => {
         // Keep product/nutrition visible even if explanation fails.
@@ -120,11 +125,18 @@ export default function ProductDetailPage() {
             <div className="flex-1">
               <h1 className="hero-title text-3xl leading-tight text-[var(--ink-900)]">{product.product_name}</h1>
               {product.brands && <p className="mt-1 text-sm text-[var(--ink-500)]">{product.brands}</p>}
-              <div className="mt-3">
-                <EcoScoreBadge grade={product.ecoscore_grade} score={product.ecoscore_score} size="md" />
-              </div>
             </div>
           </div>
+        </section>
+
+        <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
+          <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Nutri-Score</h2>
+          <EcoScoreBadge grade={product.nutriscore_grade} size="md" />
+        </section>
+
+        <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
+          <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Eco-Score</h2>
+          <EcoScoreBadge grade={product.ecoscore_grade} score={product.ecoscore_score} size="md" />
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
@@ -173,7 +185,7 @@ export default function ProductDetailPage() {
 
         <div className="flex justify-center">
           <button
-            onClick={() => navigate(`/alternatives/${code}`)}
+            onClick={() => navigate(`/alternatives/${code}`, { state: { product } })}
             className="ui-btn btn-primary fade-up w-full max-w-4xl py-3.5 text-base"
           >
             <Leaf className="h-5 w-5" />

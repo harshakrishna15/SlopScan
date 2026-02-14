@@ -3,6 +3,7 @@ export interface Product {
   product_name: string;
   brands: string;
   categories: string;
+  nutriscore_grade: string | null;
   ecoscore_grade: string | null;
   ecoscore_score: number | null;
   packaging_tags: string;
