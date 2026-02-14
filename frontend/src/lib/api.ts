@@ -23,5 +23,13 @@ export async function getRecommendations(code: string): Promise<Product[]> {
 export async function getExplanation(code: string): Promise<ExplanationResponse> {
   const res = await fetch(`/api/explain/${encodeURIComponent(code)}`);
   if (!res.ok) throw new Error(`Explanation failed: ${res.status}`);
-  return res.json();
+  const raw = await res.json();
+  return {
+    nutrition_summary: typeof raw?.nutrition_summary === 'string' ? raw.nutrition_summary : 'No nutrition summary available.',
+    eco_explanation: typeof raw?.eco_explanation === 'string' ? raw.eco_explanation : 'Eco explanation unavailable.',
+    ingredient_flags: Array.isArray(raw?.ingredient_flags)
+      ? raw.ingredient_flags.filter((f: unknown) => typeof f === 'string')
+      : [],
+    advice: typeof raw?.advice === 'string' ? raw.advice : 'No advice available.',
+  };
 }

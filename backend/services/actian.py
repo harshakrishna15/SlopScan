@@ -99,6 +99,32 @@ class ActianClient:
             distance_metric=DistanceMetric.COSINE,
         )
 
+    @staticmethod
+    def _payload_from_record(record) -> dict:
+        if isinstance(record, dict):
+            payload = record.get("payload")
+            if isinstance(payload, dict):
+                return payload
+            # Some SDK variants may return the payload fields at the top level.
+            return record
+        return getattr(record, "payload", {}) or {}
+
+    @staticmethod
+    def _vector_from_record(record) -> list[float] | None:
+        if isinstance(record, dict):
+            vector = record.get("vector")
+            return vector if isinstance(vector, list) else None
+        vector = getattr(record, "vector", None)
+        return vector if isinstance(vector, list) else None
+
+    @staticmethod
+    def _score_from_record(record) -> float:
+        if isinstance(record, dict):
+            score = record.get("score", 0)
+            return float(score) if score is not None else 0.0
+        score = getattr(record, "score", 0)
+        return float(score) if score is not None else 0.0
+
     def search_similar(self, embedding: list[float], top_k: int = 5) -> list[dict]:
         results = self._client.search(
             "products",
@@ -107,7 +133,7 @@ class ActianClient:
             with_payload=True,
         )
         return [
-            {**r.payload, "similarity_score": r.score}
+            {**self._payload_from_record(r), "similarity_score": self._score_from_record(r)}
             for r in results
         ]
 
@@ -134,7 +160,7 @@ class ActianClient:
             with_payload=True,
         )
         return [
-            {**r.payload, "similarity_score": r.score}
+            {**self._payload_from_record(r), "similarity_score": self._score_from_record(r)}
             for r in results
         ]
 
@@ -143,14 +169,15 @@ class ActianClient:
         records = self._client.query("products", filter=f, limit=1)
         if not records:
             return None
-        return records[0].payload
+        return self._payload_from_record(records[0])
 
     def get_product_with_vector(self, product_code: str) -> tuple[dict | None, list[float] | None]:
         f = Filter().must(Field("product_code").eq(product_code))
         records = self._client.query("products", filter=f, limit=1, with_vectors=True)
         if not records:
             return None, None
-        return records[0].payload, records[0].vector
+        record = records[0]
+        return self._payload_from_record(record), self._vector_from_record(record)
 
     def batch_upsert(self, ids: list[int], vectors: list[list[float]], payloads: list[dict]):
         self._client.batch_upsert("products", ids=ids, vectors=vectors, payloads=payloads)

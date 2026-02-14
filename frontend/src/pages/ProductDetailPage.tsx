@@ -20,20 +20,31 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!code) return;
     historySavedRef.current = false;
+    setLoading(true);
+    setError(null);
+    setExplanation(null);
+    setProduct(null);
 
     getProduct(code)
-      .then((data) => {
-        setProduct(data);
-        setLoading(false);
-        // Load explanation async
-        return getExplanation(code);
-      })
-      .then(setExplanation)
+      .then((data) => setProduct(data))
       .catch((e) => {
         setError(e.message);
+      })
+      .finally(() => {
         setLoading(false);
       });
   }, [code]);
+
+  useEffect(() => {
+    if (!code || !product) return;
+
+    getExplanation(code)
+      .then(setExplanation)
+      .catch(() => {
+        // Keep product/nutrition visible even if explanation fails.
+        setExplanation(null);
+      });
+  }, [code, product]);
 
   useEffect(() => {
     if (!product || historySavedRef.current) return;
@@ -73,9 +84,16 @@ export default function ProductDetailPage() {
     );
   }
 
-  const nutrition = typeof product.nutrition_json === 'string'
-    ? JSON.parse(product.nutrition_json || '{}')
-    : product.nutrition_json || {};
+  let nutrition = {};
+  if (typeof product.nutrition_json === 'string') {
+    try {
+      nutrition = JSON.parse(product.nutrition_json || '{}');
+    } catch {
+      nutrition = {};
+    }
+  } else {
+    nutrition = product.nutrition_json || {};
+  }
 
   return (
     <div className="min-h-screen px-4 py-8 pb-24">
@@ -118,7 +136,7 @@ export default function ProductDetailPage() {
               <p className="text-sm leading-6 text-[var(--ink-700)]">{explanation.eco_explanation}</p>
             </section>
 
-            {explanation.ingredient_flags.length > 0 && (
+            {Array.isArray(explanation.ingredient_flags) && explanation.ingredient_flags.length > 0 && (
               <section className="fade-up mx-auto w-full max-w-4xl rounded-2xl border border-amber-200 bg-amber-50/90 p-4 md:p-5">
                 <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold text-amber-900">
                   <AlertTriangle className="h-5 w-5" />
