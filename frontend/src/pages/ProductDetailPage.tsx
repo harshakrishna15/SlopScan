@@ -5,6 +5,7 @@ import { getProduct, getExplanation } from '../lib/api';
 import type { Product, ExplanationResponse } from '../types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EcoScoreBadge from '../components/EcoScoreBadge';
+import NutritionTable from '../components/NutritionTable';
 import { saveScanHistory } from '../lib/history';
 
 export default function ProductDetailPage() {
@@ -91,6 +92,17 @@ export default function ProductDetailPage() {
     );
   }
 
+  let nutrition = {};
+  if (typeof product.nutrition_json === 'string') {
+    try {
+      nutrition = JSON.parse(product.nutrition_json || '{}');
+    } catch {
+      nutrition = {};
+    }
+  } else {
+    nutrition = product.nutrition_json || {};
+  }
+
   return (
     <div className="min-h-screen px-4 py-8 pb-24">
       <main className="app-shell space-y-5">
@@ -115,6 +127,11 @@ export default function ProductDetailPage() {
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
           <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Eco-Score</h2>
           <EcoScoreBadge grade={product.ecoscore_grade} score={product.ecoscore_score} size="md" />
+        </section>
+
+        <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
+          <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Nutrition per 100g</h2>
+          <NutritionTable nutrition={nutrition} />
         </section>
 
         {explanation && (
