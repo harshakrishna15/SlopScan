@@ -39,3 +39,16 @@ export interface ExplanationResponse {
   ingredient_flags: string[];
   advice: string;
 }
+
+export interface ScanHistoryEntry {
+  id: string;
+  saved_at: string;
+  captured_image: string;
+  captured_image_name: string;
+  product_code: string;
+  product_name: string;
+  brands: string;
+  ecoscore_grade: string | null;
+  ecoscore_score: number | null;
+  product_image_url: string | null;
+}

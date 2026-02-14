@@ -1,9 +1,9 @@
 const COLORS: Record<string, string> = {
   a: 'bg-[#1E8F4E] text-white',
-  b: 'bg-[#60AC0E] text-white',
-  c: 'bg-[#EEAE0E] text-gray-900',
-  d: 'bg-[#FF6F1E] text-white',
-  e: 'bg-[#E63E11] text-white',
+  b: 'bg-[#4DA924] text-white',
+  c: 'bg-[#DEB314] text-[#3f3200]',
+  d: 'bg-[#F6832A] text-white',
+  e: 'bg-[#DC4A1F] text-white',
 };
 
 export default function EcoScoreBadge({
@@ -17,7 +17,7 @@ export default function EcoScoreBadge({
 }) {
   if (!grade) {
     return (
-      <span className="inline-flex items-center rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+      <span className="inline-flex items-center rounded-full border border-[var(--line-soft)] bg-[#f0f4ef] px-2.5 py-0.5 text-xs font-semibold text-[var(--ink-500)]">
         N/A
       </span>
     );
@@ -33,7 +33,7 @@ export default function EcoScoreBadge({
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full font-bold uppercase ${colorClass} ${sizeClasses[size]}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full border border-black/5 font-extrabold uppercase shadow-sm ${colorClass} ${sizeClasses[size]}`}>
       {g}
       {score != null && <span className="font-normal opacity-80">({score})</span>}
     </span>

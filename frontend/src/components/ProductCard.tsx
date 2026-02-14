@@ -23,24 +23,24 @@ export default function ProductCard({
   return (
     <button
       onClick={() => navigate(`/product/${product_code}`)}
-      className="flex w-full items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:shadow-md"
+      className="surface-card mx-auto flex w-full max-w-2xl items-center gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
     >
       {image_url ? (
         <img
           src={image_url}
           alt={product_name}
-          className="h-16 w-16 rounded-lg object-cover"
+          className="h-16 w-16 rounded-xl border border-[var(--line-soft)] object-cover"
         />
       ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-100 text-2xl">
-          📦
+        <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[#f6f8f4] text-lg font-bold text-[var(--ink-500)]">
+          P
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="truncate font-semibold text-gray-900">{product_name}</p>
-        {brands && <p className="truncate text-sm text-gray-500">{brands}</p>}
+        <p className="truncate font-semibold text-[var(--ink-900)]">{product_name}</p>
+        {brands && <p className="truncate text-sm text-[var(--ink-500)]">{brands}</p>}
         {confidence != null && (
-          <p className="text-xs text-gray-400">Match: {(confidence * 100).toFixed(0)}%</p>
+          <p className="mt-1 text-xs font-medium text-[var(--ink-500)]">Match: {(confidence * 100).toFixed(0)}%</p>
         )}
       </div>
       <EcoScoreBadge grade={ecoscore_grade} size="sm" />

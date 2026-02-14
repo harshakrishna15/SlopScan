@@ -9,8 +9,41 @@ interface CameraCaptureProps {
 export default function CameraCapture({ onCapture }: CameraCaptureProps) {
   const webcamRef = useRef<Webcam>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const [cameraError, setCameraError] = useState(false);
+  const previewAspectRatio = 16 / 9;
+  const videoConstraints = {
+    facingMode,
+    aspectRatio: previewAspectRatio,
+    width: { ideal: 4096 },
+    height: { ideal: 2160 },
+  };
+
+  const maximizeTrackResolution = useCallback(async (stream: MediaStream) => {
+    const [track] = stream.getVideoTracks();
+    if (!track) return;
+
+    if (track.getCapabilities) {
+      const capabilities = track.getCapabilities();
+      const maxWidth = capabilities.width?.max;
+      const maxHeight = capabilities.height?.max;
+
+      if (maxWidth && maxHeight) {
+        try {
+          await track.applyConstraints({
+            width: { exact: maxWidth },
+            height: { exact: maxHeight },
+          });
+        } catch {
+          await track.applyConstraints({
+            width: { ideal: maxWidth },
+            height: { ideal: maxHeight },
+          });
+        }
+      }
+    }
+
+  }, []);
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -30,35 +63,45 @@ export default function CameraCapture({ onCapture }: CameraCaptureProps) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="glass-panel mx-auto flex w-full max-w-4xl flex-col items-center gap-4 rounded-3xl p-4">
       {!cameraError ? (
-        <div className="relative w-full max-w-md overflow-hidden rounded-2xl bg-black">
-          <Webcam
-            ref={webcamRef}
-            audio={false}
-            screenshotFormat="image/jpeg"
-            videoConstraints={{ facingMode, width: 640, height: 480 }}
-            className="w-full"
-            onUserMediaError={() => setCameraError(true)}
-          />
+        <div
+          className="relative h-[52vh] w-full max-w-4xl rounded-2xl border border-white/40 bg-black/90 p-2 sm:h-[58vh] md:h-[66vh]"
+        >
+          <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl">
+            <div className="h-full max-w-full overflow-hidden rounded-xl" style={{ aspectRatio: previewAspectRatio }}>
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                screenshotQuality={1}
+                forceScreenshotSourceSize
+                videoConstraints={videoConstraints}
+                mirrored={false}
+                className="h-full w-full object-cover"
+                onUserMedia={maximizeTrackResolution}
+                onUserMediaError={() => setCameraError(true)}
+              />
+            </div>
+          </div>
           <button
             onClick={() => setFacingMode((m) => (m === 'user' ? 'environment' : 'user'))}
-            className="absolute right-3 top-3 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm"
+            className="absolute right-5 top-5 rounded-full border border-white/30 bg-black/40 p-2 text-white backdrop-blur-sm"
           >
             <SwitchCamera className="h-5 w-5" />
           </button>
         </div>
       ) : (
-        <div className="flex h-64 w-full max-w-md items-center justify-center rounded-2xl bg-gray-100 text-gray-500">
+        <div className="flex h-48 w-full max-w-2xl items-center justify-center rounded-2xl border border-dashed border-[var(--line-soft)] bg-white/80 text-[var(--ink-500)] md:h-56">
           <p className="text-center px-4">Camera not available. Use the upload button below.</p>
         </div>
       )}
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         {!cameraError && (
           <button
             onClick={capture}
-            className="flex items-center gap-2 rounded-full bg-green-600 px-6 py-3 font-semibold text-white shadow-lg transition hover:bg-green-700"
+            className="ui-btn btn-primary"
           >
             <Camera className="h-5 w-5" />
             Take Photo
@@ -67,7 +110,7 @@ export default function CameraCapture({ onCapture }: CameraCaptureProps) {
 
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 rounded-full border-2 border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:border-gray-400"
+          className="ui-btn btn-secondary"
         >
           <Upload className="h-5 w-5" />
           Upload Photo

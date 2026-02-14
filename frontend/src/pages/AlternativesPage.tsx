@@ -23,42 +23,46 @@ export default function AlternativesPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="app-shell flex min-h-screen items-center justify-center">
         <LoadingSpinner message="Finding greener alternatives..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-6">
-      <button onClick={() => navigate(-1)} className="mb-4 flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-        <ArrowLeft className="h-4 w-4" />
-        Back
-      </button>
+    <div className="min-h-screen px-4 py-8">
+      <main className="app-shell flex flex-col items-center">
+        <button onClick={() => navigate(-1)} className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-[var(--ink-500)] transition hover:text-[var(--ink-700)]">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
 
-      <h2 className="mb-4 text-xl font-bold text-gray-900">Greener Alternatives</h2>
+        <section className="glass-panel fade-up w-full max-w-4xl rounded-3xl p-5 md:p-6">
+          <h2 className="hero-title text-center text-3xl text-[var(--ink-900)]">Greener Alternatives</h2>
 
-      {error && <p className="mb-4 text-red-600">{error}</p>}
+          {error && <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-red-700">{error}</p>}
 
-      {alternatives.length === 0 && !error ? (
-        <p className="text-center text-gray-500 py-8">
-          No greener alternatives found for this product category.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {alternatives.map((alt) => (
-            <ProductCard
-              key={alt.product_code}
-              product_code={alt.product_code}
-              product_name={alt.product_name}
-              brands={alt.brands}
-              ecoscore_grade={alt.ecoscore_grade}
-              confidence={alt.similarity_score}
-              image_url={alt.image_url}
-            />
-          ))}
-        </div>
-      )}
+          {alternatives.length === 0 && !error ? (
+            <p className="py-8 text-center text-[var(--ink-500)]">
+              No greener alternatives found for this product category.
+            </p>
+          ) : (
+            <div className="mt-5 flex flex-col items-center gap-3">
+              {alternatives.map((alt) => (
+                <ProductCard
+                  key={alt.product_code}
+                  product_code={alt.product_code}
+                  product_name={alt.product_name}
+                  brands={alt.brands}
+                  ecoscore_grade={alt.ecoscore_grade}
+                  confidence={alt.similarity_score}
+                  image_url={alt.image_url}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

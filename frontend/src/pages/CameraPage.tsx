@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { Leaf } from 'lucide-react';
 import CameraCapture from '../components/CameraCapture';
 
 export default function CameraPage() {
@@ -11,24 +10,19 @@ export default function CameraPage() {
     reader.onload = () => {
       sessionStorage.setItem('capturedImage', reader.result as string);
       sessionStorage.setItem('capturedImageName', file.name);
+      sessionStorage.setItem('pendingScanHistorySave', '1');
       navigate('/results');
     };
     reader.readAsDataURL(file);
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-green-50 to-white px-4 pt-8 pb-12">
-      <div className="mb-8 flex flex-col items-center gap-2">
-        <div className="flex items-center gap-2">
-          <Leaf className="h-8 w-8 text-green-600" />
-          <h1 className="text-3xl font-bold text-gray-900">ShelfScan</h1>
+    <div className="h-[calc(100dvh-4rem)] overflow-hidden px-3 py-3 sm:px-4 sm:py-4">
+      <main className="app-shell flex h-full flex-col items-center justify-center">
+        <div className="fade-up-delay flex w-full min-h-0 flex-1 items-center">
+          <CameraCapture onCapture={handleCapture} />
         </div>
-        <p className="text-center text-gray-500">
-          Scan a food product to see its nutrition, eco-score, and greener alternatives
-        </p>
-      </div>
-
-      <CameraCapture onCapture={handleCapture} />
+      </main>
     </div>
   );
 }

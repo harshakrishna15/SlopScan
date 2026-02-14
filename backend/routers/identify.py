@@ -37,6 +37,7 @@ async def identify(image: UploadFile = File(...)):
 
     all_results = []
     seen_codes = set()
+    search_errors = []
     for emb in embeddings:
         try:
             matches = actian_client.search_similar(emb, top_k=3)
@@ -45,8 +46,11 @@ async def identify(image: UploadFile = File(...)):
                 if code and code not in seen_codes:
                     seen_codes.add(code)
                     all_results.append(m)
-        except Exception:
-            continue
+        except Exception as e:
+            search_errors.append(str(e))
+
+    if not all_results and search_errors:
+        raise HTTPException(status_code=502, detail=f"Vector search error: {search_errors[0]}")
 
     all_results.sort(key=lambda x: x.get("similarity_score", 0), reverse=True)
     candidates = all_results[:5]

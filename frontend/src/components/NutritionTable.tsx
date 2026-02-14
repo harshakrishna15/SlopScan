@@ -18,19 +18,19 @@ export default function NutritionTable({ nutrition }: { nutrition: Nutrition }) 
   ];
 
   return (
-    <div className="overflow-hidden rounded-lg border border-gray-200">
+    <div className="overflow-hidden rounded-xl border border-[var(--line-soft)] bg-white">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-gray-50">
-            <th className="px-4 py-2 text-left font-medium text-gray-600">Nutrient</th>
-            <th className="px-4 py-2 text-right font-medium text-gray-600">Per 100g</th>
+          <tr className="bg-[#f4f8f2]">
+            <th className="px-4 py-2.5 text-left font-semibold text-[var(--ink-700)]">Nutrient</th>
+            <th className="px-4 py-2.5 text-right font-semibold text-[var(--ink-700)]">Per 100g</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.label} className="border-t border-gray-100">
-              <td className="px-4 py-2 text-gray-700">{row.label}</td>
-              <td className="px-4 py-2 text-right text-gray-900">
+            <tr key={row.label} className="border-t border-[#edf2ec]">
+              <td className="px-4 py-2.5 text-[var(--ink-700)]">{row.label}</td>
+              <td className="px-4 py-2.5 text-right font-semibold text-[var(--ink-900)]">
                 {row.value != null ? `${row.value} ${row.unit}` : '—'}
               </td>
             </tr>
