@@ -43,7 +43,7 @@ export default function HistoryPage() {
               {items.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => navigate(`/product/${item.product_code}`)}
+                  onClick={() => navigate(`/product/${item.product_code}`, { state: { product: item.product } })}
                   className="surface-card group relative flex items-start gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   {item.product_image_url ? (

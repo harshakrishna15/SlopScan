@@ -29,6 +29,7 @@ export function saveScanHistory(product: Product): void {
     ecoscore_grade: product.ecoscore_grade,
     ecoscore_score: product.ecoscore_score,
     product_image_url: product.image_url,
+    product,
   };
 
   const next = [entry, ...current].slice(0, MAX_HISTORY_ITEMS);

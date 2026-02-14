@@ -46,4 +46,5 @@ export interface ScanHistoryEntry {
   ecoscore_grade: string | null;
   ecoscore_score: number | null;
   product_image_url: string | null;
+  product?: Product;
 }
