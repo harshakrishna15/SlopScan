@@ -14,7 +14,11 @@ async def lifespan(app: FastAPI):
     try:
         actian_client.connect()
         actian_client.ensure_collection()
-        print(f"Actian products count: {actian_client.count()}")
+        initial_count = actian_client.count()
+        print(f"Actian products count: {initial_count}")
+        if initial_count == 0 and actian_client.seed_dummy_products_if_empty():
+            print("Seeded Actian with dummy products for local testing.")
+        print(f"Actian products count (active): {actian_client.count()}")
         print(f"Connected to Actian VectorDB at {ACTIAN_ADDRESS}")
     except Exception as e:
         print(f"Warning: Could not connect to Actian VectorDB: {e}")

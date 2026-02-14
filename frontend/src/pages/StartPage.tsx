@@ -5,9 +5,9 @@ export default function StartPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen px-4 py-6 md:py-8">
-      <main className="app-shell flex min-h-[calc(100dvh-4rem)] items-center justify-center">
-        <section className="glass-panel fade-up relative w-full max-w-3xl overflow-hidden rounded-3xl p-6 md:p-8">
+    <div className="h-[calc(100dvh-4rem)] overflow-hidden px-3 py-3 sm:px-4 sm:py-4">
+      <main className="app-shell flex h-full items-center justify-center">
+        <section className="glass-panel fade-up relative w-full max-w-3xl overflow-hidden rounded-3xl p-5 md:p-8">
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-green-200/40 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-16 -left-8 h-44 w-44 rounded-full bg-emerald-100/40 blur-2xl" />
 
