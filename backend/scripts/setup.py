@@ -72,7 +72,8 @@ def main():
             distance_metric=DistanceMetric.COSINE,
         )
 
-        # Batch insert
+        # Batch insert — store ALL fields from the catalog.
+        # Lists/dicts are JSON-serialized for storage; the UI selectively reads what it needs.
         total = len(products)
         BATCH_SIZE = 100
         for start_idx in range(0, total, BATCH_SIZE):
@@ -81,22 +82,32 @@ def main():
             batch_vectors = [embeddings[i].tolist() for i in range(start_idx, end_idx)]
             batch_payloads = []
 
+            # Fields to skip: "ingredients" is a massive nested structure (up to 80KB)
+            # that duplicates "ingredients_text" in a less useful form.
+            # "images" is per-image metadata blobs. "ecoscore_data" can also be huge.
+            # "packagings" is structured packaging data redundant with packaging_tags.
+            SKIP_KEYS = {"code", "ingredients", "images", "ecoscore_data", "packagings"}
+
             for p in products[start_idx:end_idx]:
-                batch_payloads.append({
-                    "product_code": p["code"],
-                    "product_name": p["product_name"],
-                    "brands": p.get("brands", ""),
-                    "categories": p.get("categories", ""),
-                    "categories_tags": json.dumps(p.get("categories_tags", [])),
-                    "ecoscore_grade": p.get("ecoscore_grade"),
-                    "ecoscore_score": p.get("ecoscore_score"),
-                    "packaging_tags": json.dumps(p.get("packaging_tags", [])),
-                    "labels_tags": json.dumps(p.get("labels_tags", [])),
-                    "ingredients_text": p.get("ingredients_text", ""),
-                    "palm_oil_count": p.get("ingredients_from_palm_oil_n", 0),
-                    "nutrition_json": json.dumps(p.get("nutriments", {})),
-                    "image_url": p.get("image_front_url"),
-                })
+                payload = {}
+                payload["product_code"] = p["code"]
+                for key, val in p.items():
+                    if key in SKIP_KEYS:
+                        continue
+                    if val is None:
+                        continue
+                    if isinstance(val, (list, dict)):
+                        serialized = json.dumps(val)
+                        if len(serialized) > 5_000:
+                            continue
+                        payload[key] = serialized
+                    else:
+                        payload[key] = val
+                # Keep legacy aliases the UI expects
+                payload.setdefault("palm_oil_count", p.get("ingredients_from_palm_oil_n") or 0)
+                payload.setdefault("nutrition_json", json.dumps(p.get("nutriments") or {}))
+                payload.setdefault("image_url", p.get("image_front_url") or "")
+                batch_payloads.append(payload)
 
             client.batch_upsert("products", ids=batch_ids, vectors=batch_vectors, payloads=batch_payloads)
             if end_idx % 500 == 0 or end_idx == total:
