@@ -22,7 +22,7 @@ def _parse_json_response(text: str) -> str:
     # Sometimes the model wraps in just backticks
     text = text.strip("`").strip()
     # Try to find a JSON array or object in the response
-    for start_char, end_char in [("[", "]"), ("{", "}")]:
+    for start_char, end_char in [("{", "}"), ("[", "]")]:
         start = text.find(start_char)
         end = text.rfind(end_char)
         if start != -1 and end != -1 and end > start:
@@ -70,6 +70,7 @@ def _explain_sync(product_data: dict) -> dict:
         try:
             nutrition = json.loads(nutrition)
         except json.JSONDecodeError:
+            print(f"[explain] WARN nutrition_json is not valid JSON: {str(nutrition)[:200]}")
             nutrition = {}
 
     ecoscore_grade = product_data.get("ecoscore_grade") or "not available"
@@ -98,17 +99,35 @@ Return ONLY valid JSON."""
 
     model = genai.GenerativeModel(GEMINI_MODEL)
     response = model.generate_content(prompt)
-    text = _parse_json_response(response.text)
+    raw_text = response.text
+    print(f"[explain] Gemini raw response: {raw_text[:500]}")
+
+    text = _parse_json_response(raw_text)
 
     try:
-        return json.loads(text)
-    except json.JSONDecodeError:
+        parsed = json.loads(text)
+    except json.JSONDecodeError as e:
+        print(f"[explain] ERROR failed to parse JSON: {e}")
+        print(f"[explain] ERROR raw: {raw_text[:500]}")
+        print(f"[explain] ERROR after parse: {text[:500]}")
         return {
             "nutrition_summary": "Unable to generate detailed analysis.",
             "eco_explanation": eco_str,
             "ingredient_flags": [],
             "advice": "Check the product label for more details.",
         }
+
+    if not isinstance(parsed, dict):
+        print(f"[explain] ERROR Gemini returned {type(parsed).__name__} instead of dict: {text[:500]}")
+        return {
+            "nutrition_summary": "Unable to generate detailed analysis.",
+            "eco_explanation": eco_str,
+            "ingredient_flags": [],
+            "advice": "Check the product label for more details.",
+        }
+
+    print(f"[explain] OK keys={list(parsed.keys())}")
+    return parsed
 
 
 async def explain_product(product_data: dict) -> dict:
