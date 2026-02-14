@@ -45,8 +45,6 @@ Edit `backend/.env` and set your Gemini API key:
 
 ```
 GEMINI_API_KEY=your-key-here
-ACTIAN_HOST=localhost
-ACTIAN_PORT=50051
 ```
 
 ### 4. Run the data pipeline
