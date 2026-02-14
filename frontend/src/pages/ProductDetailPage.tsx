@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Leaf, AlertTriangle } from 'lucide-react';
 import { getProduct, getExplanation } from '../lib/api';
 import type { Product, ExplanationResponse } from '../types';
@@ -11,6 +11,7 @@ import { saveScanHistory } from '../lib/history';
 export default function ProductDetailPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [product, setProduct] = useState<Product | null>(null);
   const [explanation, setExplanation] = useState<ExplanationResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,15 @@ export default function ProductDetailPage() {
     setExplanation(null);
     setProduct(null);
 
+    // Use product data passed via router state (from search results) to avoid
+    // re-querying by product_code which can return the wrong record if codes are duplicated.
+    const stateProduct = (location.state as { product?: Product })?.product;
+    if (stateProduct) {
+      setProduct(stateProduct);
+      setLoading(false);
+      return;
+    }
+
     getProduct(code)
       .then((data) => setProduct(data))
       .catch((e) => {
@@ -33,7 +43,7 @@ export default function ProductDetailPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [code]);
+  }, [code, location.state]);
 
   useEffect(() => {
     if (!code || !product) return;

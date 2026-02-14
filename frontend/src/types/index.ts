@@ -23,13 +23,7 @@ export interface IdentifyResponse {
     confidence: number;
     ecoscore_grade: string | null;
   } | null;
-  candidates: Array<{
-    product_code: string;
-    product_name: string;
-    brands: string;
-    confidence: number;
-    ecoscore_grade: string | null;
-  }>;
+  candidates: Array<Product & { confidence: number }>;
   needs_confirmation: boolean;
 }
 

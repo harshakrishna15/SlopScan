@@ -31,8 +31,11 @@ export default function ResultsPage() {
       .then((data) => {
         setResult(data);
         // Auto-navigate if confident match
-        if (!data.needs_confirmation && data.best_match) {
-          navigate(`/product/${data.best_match.product_code}`, { replace: true });
+        if (!data.needs_confirmation && data.best_match && data.candidates.length > 0) {
+          navigate(`/product/${data.best_match.product_code}`, {
+            replace: true,
+            state: { product: data.candidates[0] },
+          });
         }
       })
       .catch((e) => setError(e.message))
@@ -103,6 +106,7 @@ export default function ResultsPage() {
                 brands={c.brands}
                 ecoscore_grade={c.ecoscore_grade}
                 confidence={c.confidence}
+                fullProduct={c}
               />
             ))}
           </div>

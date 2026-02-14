@@ -13,8 +13,8 @@ from datasets import load_dataset
 
 
 OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json")
-TARGET_COUNT = 2000
-MAX_SCAN = 10_000
+TARGET_COUNT = 100_000
+MAX_SCAN = int(TARGET_COUNT * 1.5)
 
 
 def _to_str(val) -> str:

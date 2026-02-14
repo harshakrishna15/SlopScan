@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import type { Product } from '../types';
 import EcoScoreBadge from './EcoScoreBadge';
 
 interface ProductCardProps {
@@ -8,6 +9,7 @@ interface ProductCardProps {
   ecoscore_grade: string | null;
   confidence?: number;
   image_url?: string | null;
+  fullProduct?: Product;
 }
 
 export default function ProductCard({
@@ -17,12 +19,13 @@ export default function ProductCard({
   ecoscore_grade,
   confidence,
   image_url,
+  fullProduct,
 }: ProductCardProps) {
   const navigate = useNavigate();
 
   return (
     <button
-      onClick={() => navigate(`/product/${product_code}`)}
+      onClick={() => navigate(`/product/${product_code}`, { state: { product: fullProduct } })}
       className="surface-card mx-auto flex w-full max-w-2xl items-center gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
     >
       {image_url ? (
