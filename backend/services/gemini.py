@@ -41,9 +41,10 @@ def _identify_sync(image_bytes: bytes) -> dict:
             (
                 "You are a food product identifier. Look at this photo of a food product package. "
                 "Return a JSON object with two fields:\n"
-                "1. 'guesses': A JSON array of 3-5 possible product names (including brand), from most to least likely.\n"
-                "2. 'brand': The most likely brand name detected (e.g. 'Coca-Cola', 'Nestle').\n"
+                "1. 'guesses': A JSON array of 3-5 possible product names (including brand) IN ENGLISH, from most to least likely.\n"
+                "2. 'brand': The most likely brand name detected (e.g. 'Coca-Cola', 'Nestle') IN ENGLISH.\n"
                 'Example: {"guesses": ["Nutella Hazelnut Spread", "Nutella & Go"], "brand": "Ferrero"}\n'
+                "Prioritize English names even if the packaging is in another language.\n"
                 "Return ONLY the valid JSON object, no other text."
             ),
         ]
@@ -89,7 +90,7 @@ def _explain_sync(product_data: dict) -> dict:
 provide a JSON response with these fields:
 {{
   "nutrition_summary": "2-3 sentences about the nutrition profile",
-  "eco_explanation": "what the eco-score means, or 'Not available' if missing",
+  "eco_explanation": "Explanation of the Eco-Score (if available) OR the predicted Eco-Score (if missing). Do NOT say 'Not available' if you are predicting a score.",
   "ingredient_flags": ["list of concerns: palm oil, additives, allergens"],
   "advice": "1-2 sentences of practical advice",
   "predicted_nutriscore": "a-e or null (ONLY if nutriscore_grade is missing - predict based on nutrition data)",

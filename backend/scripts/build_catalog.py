@@ -94,6 +94,11 @@ def extract_product(row: dict) -> dict | None:
     if not product_name.strip() or not code:
         return None
 
+    # Filter for English products
+    languages_tags = _normalize_list(row.get("languages_tags"))
+    if "en:english" not in languages_tags:
+        return None
+
     # Normalize ecoscore_grade
     ecoscore_grade = row.get("ecoscore_grade") or None
     if ecoscore_grade and ecoscore_grade.lower() not in ("a", "b", "c", "d", "e"):

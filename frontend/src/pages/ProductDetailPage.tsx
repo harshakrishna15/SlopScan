@@ -146,21 +146,29 @@ export default function ProductDetailPage() {
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
           <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Nutri-Score</h2>
-          <EcoScoreBadge
-            grade={product.nutriscore_grade || explanation?.predicted_nutriscore || null}
-            size="md"
-            predicted={!product.nutriscore_grade && !!explanation?.predicted_nutriscore}
-          />
+          {(() => {
+            const dbGrade = product.nutriscore_grade === 'unknown' ? null : product.nutriscore_grade;
+            const grade = dbGrade || explanation?.predicted_nutriscore || null;
+            const predicted = !dbGrade && !!explanation?.predicted_nutriscore;
+            return <EcoScoreBadge grade={grade} size="md" predicted={predicted} />;
+          })()}
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
           <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Eco-Score</h2>
-          <EcoScoreBadge
-            grade={product.ecoscore_grade || explanation?.predicted_ecoscore || null}
-            score={product.ecoscore_score}
-            size="md"
-            predicted={!product.ecoscore_grade && !!explanation?.predicted_ecoscore}
-          />
+          {(() => {
+            const dbGrade = product.ecoscore_grade === 'unknown' ? null : product.ecoscore_grade;
+            const grade = dbGrade || explanation?.predicted_ecoscore || null;
+            const predicted = !dbGrade && !!explanation?.predicted_ecoscore;
+            return (
+              <EcoScoreBadge
+                grade={grade}
+                score={product.ecoscore_score}
+                size="md"
+                predicted={predicted}
+              />
+            );
+          })()}
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">

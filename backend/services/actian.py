@@ -152,17 +152,56 @@ class ActianClient:
 
         f = Filter().must(Field("ecoscore_grade").is_in(grade_set))
 
+        # Fetch more candidates to filter by category in application logic
+        # since exact category matching via vector search isn't strict enough
+        search_limit = top_k * 10
+        
         results = self._client.search(
             "products",
             query=embedding,
-            top_k=top_k,
+            top_k=search_limit,
             filter=f,
             with_payload=True,
         )
-        return [
+        
+        candidates = [
             {**self._payload_from_record(r), "similarity_score": self._score_from_record(r)}
             for r in results
         ]
+
+        # Filter strictly by category overlap
+        if not category:
+            return candidates[:top_k]
+
+        source_cats = set(c.strip().lower() for c in category.split(","))
+        filtered = []
+        
+        for cand in candidates:
+            cand_cats_str = cand.get("categories", "")
+            if not cand_cats_str:
+                continue
+            
+            cand_cats = set(c.strip().lower() for c in cand_cats_str.split(","))
+            
+            # Check for overlap
+            # If we have specific categories, ensure at least one matches
+            if not source_cats.isdisjoint(cand_cats):
+                filtered.append(cand)
+                
+            if len(filtered) >= top_k:
+                break
+        
+        # If filtering was too strict, fall back (or just return what we have)
+        if len(filtered) < top_k:
+            # Add remaining candidates that weren't included, up to top_k
+            seen_ids = set(c.get("product_code") for c in filtered)
+            for c in candidates:
+                if c.get("product_code") not in seen_ids:
+                    filtered.append(c)
+                    if len(filtered) >= top_k:
+                        break
+
+        return filtered
 
     def get_product(self, product_code: str) -> dict | None:
         f = Filter().must(Field("product_code").eq(product_code))
