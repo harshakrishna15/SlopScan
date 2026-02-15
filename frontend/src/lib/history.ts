@@ -18,11 +18,13 @@ export function getScanHistory(): ScanHistoryEntry[] {
 
 export function saveScanHistory(product: Product): void {
   const current = getScanHistory();
+  const capturedImage = sessionStorage.getItem('capturedImage') || '';
+  const capturedImageName = sessionStorage.getItem('capturedImageName') || '';
   const entry: ScanHistoryEntry = {
     id: `${product.product_code}-${Date.now()}`,
     saved_at: new Date().toISOString(),
-    captured_image: '',
-    captured_image_name: '',
+    captured_image: capturedImage,
+    captured_image_name: capturedImageName,
     product_code: product.product_code,
     product_name: product.product_name,
     brands: product.brands,

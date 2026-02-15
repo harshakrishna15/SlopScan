@@ -32,9 +32,10 @@ export default function ResultsPage() {
         setResult(data);
         // Auto-navigate if confident match
         if (!data.needs_confirmation && data.best_match && data.candidates.length > 0) {
+          const capturedImage = sessionStorage.getItem('capturedImage') || undefined;
           navigate(`/product/${data.best_match.product_code}`, {
             replace: true,
-            state: { product: data.candidates[0] },
+            state: { product: data.candidates[0], capturedImage },
           });
         }
       })

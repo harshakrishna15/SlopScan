@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types';
 import EcoScoreBadge from './EcoScoreBadge';
+import { getUnifiedCategory } from '../lib/categoryIcon';
 
 interface ProductCardProps {
   product_code: string;
@@ -9,7 +10,6 @@ interface ProductCardProps {
   nutriscore_grade?: string | null;
   ecoscore_grade: string | null;
   confidence?: number;
-  image_url?: string | null;
   fullProduct?: Product;
 }
 
@@ -20,27 +20,20 @@ export default function ProductCard({
   nutriscore_grade,
   ecoscore_grade,
   confidence,
-  image_url,
   fullProduct,
 }: ProductCardProps) {
   const navigate = useNavigate();
+  const capturedImage = sessionStorage.getItem('capturedImage') || undefined;
+  const { Icon } = getUnifiedCategory(fullProduct?.categories || '', product_name);
 
   return (
     <button
-      onClick={() => navigate(`/product/${product_code}`, { state: { product: fullProduct } })}
+      onClick={() => navigate(`/product/${product_code}`, { state: { product: fullProduct, capturedImage } })}
       className="surface-card mx-auto flex w-full max-w-2xl items-center gap-4 rounded-2xl p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg"
     >
-      {image_url ? (
-        <img
-          src={image_url}
-          alt={product_name}
-          className="h-16 w-16 rounded-xl border border-[var(--line-soft)] object-cover"
-        />
-      ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[#f6f8f4] text-lg font-bold text-[var(--ink-500)]">
-          P
-        </div>
-      )}
+      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[var(--surface-100)]">
+        <Icon className="h-7 w-7 text-[var(--ink-700)]" />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="truncate font-semibold text-[var(--ink-900)]">{product_name}</p>
         {brands && <p className="truncate text-sm text-[var(--ink-500)]">{brands}</p>}
@@ -51,7 +44,7 @@ export default function ProductCard({
       <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-[var(--ink-400)]">Nutri</span>
-          <EcoScoreBadge grade={nutriscore_grade} size="sm" />
+          <EcoScoreBadge grade={nutriscore_grade ?? null} size="sm" />
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-[var(--ink-400)]">Eco</span>

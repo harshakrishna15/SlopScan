@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EcoScoreBadge from '../components/EcoScoreBadge';
 import NutritionTable from '../components/NutritionTable';
 import { saveScanHistory } from '../lib/history';
+import { getUnifiedCategory } from '../lib/categoryIcon';
 
 export default function ProductDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -107,6 +108,11 @@ export default function ProductDetailPage() {
   } else {
     nutrition = product.nutrition_json || {};
   }
+  const stateCapturedImage = (location.state as { capturedImage?: string } | null)?.capturedImage || null;
+  const sessionCapturedImage = sessionStorage.getItem('capturedImage');
+  const capturedImage = stateCapturedImage || sessionCapturedImage;
+  const displayImage = capturedImage || product.image_url || null;
+  const { label: categoryLabel, Icon: CategoryIcon } = getUnifiedCategory(product.categories, product.product_name);
 
   return (
     <div className="min-h-screen px-4 py-8 pb-24">
@@ -117,16 +123,33 @@ export default function ProductDetailPage() {
             Back
           </button>
           <div className="flex items-start gap-4">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.product_name} className="h-20 w-20 rounded-2xl border border-white/60 object-cover shadow-sm" />
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-3xl">🛒</div>
-            )}
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-100)]">
+              <CategoryIcon className="h-9 w-9 text-[var(--ink-700)]" />
+            </div>
             <div className="flex-1">
               <h1 className="hero-title text-3xl leading-tight text-[var(--ink-900)]">{product.product_name}</h1>
               {product.brands && <p className="mt-1 text-sm text-[var(--ink-500)]">{product.brands}</p>}
+              <p className="mt-1 text-xs font-medium text-[var(--ink-500)]">{categoryLabel}</p>
             </div>
           </div>
+        </section>
+
+        <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
+          <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Product Photo</h2>
+          {displayImage ? (
+            <div className="mx-auto inline-block rounded-2xl border-2 border-[var(--line-soft)] bg-[var(--surface-100)] p-2 shadow-sm">
+              <img
+                src={displayImage}
+                alt={product.product_name}
+                className="max-h-[28rem] w-auto max-w-full rounded-xl bg-[var(--surface-100)] object-contain"
+              />
+            </div>
+          ) : (
+            <div className="flex h-56 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-[var(--line-soft)] bg-[var(--surface-100)] p-2 md:h-72">
+              <CategoryIcon className="h-12 w-12 text-[var(--ink-600)]" />
+              <p className="text-sm font-medium text-[var(--ink-600)]">No photo available</p>
+            </div>
+          )}
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">

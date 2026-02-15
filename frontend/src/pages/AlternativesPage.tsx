@@ -63,7 +63,6 @@ export default function AlternativesPage() {
                   nutriscore_grade={alt.nutriscore_grade}
                   ecoscore_grade={alt.ecoscore_grade}
                   confidence={alt.similarity_score}
-                  image_url={alt.image_url}
                   fullProduct={alt}
                 />
               ))}
