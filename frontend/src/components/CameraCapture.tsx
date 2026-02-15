@@ -84,6 +84,12 @@ export default function CameraCapture({ onCapture }: CameraCaptureProps) {
               />
             </div>
           </div>
+          <button
+            onClick={() => setFacingMode((m) => (m === 'user' ? 'environment' : 'user'))}
+            className="absolute right-5 top-5 rounded-full border border-white/30 bg-black/40 p-2 text-white backdrop-blur-sm"
+          >
+            <SwitchCamera className="h-5 w-5" />
+          </button>
         </div>
       ) : (
         <div className="flex h-48 w-full max-w-2xl items-center justify-center rounded-2xl border border-dashed border-[var(--line-soft)] bg-white/80 text-[var(--ink-500)] md:h-56">

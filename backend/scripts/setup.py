@@ -10,6 +10,8 @@ import json
 import os
 import sys
 import time
+
+import numpy as np
 from sentence_transformers import SentenceTransformer
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,12 +21,6 @@ from cortex import CortexClient, DistanceMetric
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
 CATALOG_PATH = os.path.join(DATA_DIR, "catalog.json")
-
-# Balanced profile for Apple Silicon laptops with 16GB RAM.
-# Adjust only if you see very low CPU utilization (increase) or memory pressure (decrease).
-ENCODE_CHUNK_SIZE = 3000
-EMBED_BATCH_SIZE = 96
-UPSERT_BATCH_SIZE = 100
 
 # Import build_catalog functions
 from scripts.build_catalog import main as build_catalog
@@ -50,7 +46,13 @@ def main():
     print(f"Loaded {len(products)} products")
     print(f"Model: {EMBEDDING_MODEL_NAME}")
 
+    texts = [p.get("product_name", "") for p in products]
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
+
+    start = time.time()
+    embeddings = model.encode(texts, normalize_embeddings=True, batch_size=512, show_progress_bar=True)
+    elapsed = time.time() - start
+    print(f"Encoded {len(texts)} texts in {elapsed:.1f}s ({len(texts)/elapsed:.0f} texts/sec)")
 
     # --- Step 3: Ingest into Actian VectorDB ---
     print("\n" + "=" * 60)
@@ -70,71 +72,46 @@ def main():
             distance_metric=DistanceMetric.COSINE,
         )
 
-        # Chunked encode + batch insert — avoids holding all embeddings in memory.
+        # Batch insert — store ALL fields from the catalog.
         # Lists/dicts are JSON-serialized for storage; the UI selectively reads what it needs.
         total = len(products)
-        encode_started = time.time()
+        BATCH_SIZE = 100
+        for start_idx in range(0, total, BATCH_SIZE):
+            end_idx = min(start_idx + BATCH_SIZE, total)
+            batch_ids = list(range(start_idx, end_idx))
+            batch_vectors = [embeddings[i].tolist() for i in range(start_idx, end_idx)]
+            batch_payloads = []
 
-        for chunk_start in range(0, total, ENCODE_CHUNK_SIZE):
-            chunk_end = min(chunk_start + ENCODE_CHUNK_SIZE, total)
-            chunk_products = products[chunk_start:chunk_end]
-            chunk_texts = [p.get("product_name", "") for p in chunk_products]
-            chunk_vectors = model.encode(
-                chunk_texts,
-                normalize_embeddings=True,
-                batch_size=EMBED_BATCH_SIZE,
-                show_progress_bar=False,
-            )
+            # Fields to skip: "ingredients" is a massive nested structure (up to 80KB)
+            # that duplicates "ingredients_text" in a less useful form.
+            # "images" is per-image metadata blobs. "ecoscore_data" can also be huge.
+            # "packagings" is structured packaging data redundant with packaging_tags.
+            SKIP_KEYS = {"code", "ingredients", "images", "ecoscore_data", "packagings"}
 
-            for local_start in range(0, len(chunk_products), UPSERT_BATCH_SIZE):
-                local_end = min(local_start + UPSERT_BATCH_SIZE, len(chunk_products))
-                global_start = chunk_start + local_start
-                global_end = chunk_start + local_end
-                batch_ids = list(range(global_start, global_end))
-                batch_vectors = [v.tolist() for v in chunk_vectors[local_start:local_end]]
-                batch_payloads = []
-
-                # Fields to skip: "ingredients" is a massive nested structure (up to 80KB)
-                # that duplicates "ingredients_text" in a less useful form.
-                # "images" is per-image metadata blobs. "ecoscore_data" can also be huge.
-                # "packagings" is structured packaging data redundant with packaging_tags.
-                SKIP_KEYS = {"code", "ingredients", "images", "ecoscore_data", "packagings"}
-
-                for p in chunk_products[local_start:local_end]:
-                    payload = {}
-                    payload["product_code"] = p["code"]
-                    for key, val in p.items():
-                        if key in SKIP_KEYS:
+            for p in products[start_idx:end_idx]:
+                payload = {}
+                payload["product_code"] = p["code"]
+                for key, val in p.items():
+                    if key in SKIP_KEYS:
+                        continue
+                    if val is None:
+                        continue
+                    if isinstance(val, (list, dict)):
+                        serialized = json.dumps(val)
+                        if len(serialized) > 5_000:
                             continue
-                        if val is None:
-                            continue
-                        if isinstance(val, (list, dict)):
-                            serialized = json.dumps(val)
-                            if len(serialized) > 5_000:
-                                continue
-                            payload[key] = serialized
-                        else:
-                            payload[key] = val
-                    # Keep legacy aliases the UI expects
-                    payload.setdefault(
-                        "palm_oil_count", p.get("ingredients_from_palm_oil_n") or 0
-                    )
-                    payload.setdefault("nutrition_json", json.dumps(p.get("nutriments") or {}))
-                    payload.setdefault("image_url", p.get("image_front_url") or "")
-                    batch_payloads.append(payload)
+                        payload[key] = serialized
+                    else:
+                        payload[key] = val
+                # Keep legacy aliases the UI expects
+                payload.setdefault("palm_oil_count", p.get("ingredients_from_palm_oil_n") or 0)
+                payload.setdefault("nutrition_json", json.dumps(p.get("nutriments") or {}))
+                payload.setdefault("image_url", p.get("image_front_url") or "")
+                batch_payloads.append(payload)
 
-                client.batch_upsert(
-                    "products", ids=batch_ids, vectors=batch_vectors, payloads=batch_payloads
-                )
-                if global_end % 500 == 0 or global_end == total:
-                    print(f"  Inserted {global_end}/{total}")
-
-            elapsed = time.time() - encode_started
-            rate = chunk_end / elapsed if elapsed > 0 else 0
-            print(
-                f"  Encoded chunk {chunk_end}/{total} "
-                f"({rate:.0f} products/sec overall)"
-            )
+            client.batch_upsert("products", ids=batch_ids, vectors=batch_vectors, payloads=batch_payloads)
+            if end_idx % 500 == 0 or end_idx == total:
+                print(f"  Inserted {end_idx}/{total}")
 
         count = client.count("products")
         print(f"\nTotal vectors in collection: {count}")
