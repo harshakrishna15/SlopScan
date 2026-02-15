@@ -14,7 +14,7 @@ export default function StartPage() {
           <div className="relative text-center">
             <div className="mx-auto mb-3 inline-flex items-center gap-3">
               <Leaf className="h-8 w-8 text-green-700" />
-              <h1 className="hero-title text-4xl leading-tight text-[var(--ink-900)] md:text-6xl">ShelfScan</h1>
+              <h1 className="hero-title text-4xl leading-tight text-[var(--ink-900)] md:text-6xl">SlopScan</h1>
             </div>
 
             <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--ink-700)] md:text-base">

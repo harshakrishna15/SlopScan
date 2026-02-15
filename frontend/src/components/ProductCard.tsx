@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types';
 import EcoScoreBadge from './EcoScoreBadge';
+import { getUnifiedCategory } from '../lib/categoryIcon';
 
 interface ProductCardProps {
   product_code: string;
@@ -24,6 +25,11 @@ export default function ProductCard({
   fullProduct,
 }: ProductCardProps) {
   const navigate = useNavigate();
+  const { Icon } = getUnifiedCategory(
+    fullProduct?.categories || '',
+    fullProduct?.categories_tags,
+    product_name,
+  );
 
   return (
     <button
@@ -37,8 +43,8 @@ export default function ProductCard({
           className="h-16 w-16 rounded-xl border border-[var(--line-soft)] object-cover"
         />
       ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[#f6f8f4] text-lg font-bold text-[var(--ink-500)]">
-          P
+        <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-[var(--ink-600)]">
+          <Icon className="h-7 w-7" />
         </div>
       )}
       <div className="flex-1 min-w-0">
@@ -51,7 +57,7 @@ export default function ProductCard({
       <div className="flex flex-col items-end gap-1.5">
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-[var(--ink-400)]">Nutri</span>
-          <EcoScoreBadge grade={nutriscore_grade} size="sm" />
+          <EcoScoreBadge grade={nutriscore_grade ?? null} size="sm" />
         </div>
         <div className="flex items-center gap-1">
           <span className="text-[10px] text-[var(--ink-400)]">Eco</span>
