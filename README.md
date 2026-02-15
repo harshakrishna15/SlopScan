@@ -2,6 +2,32 @@
 
 Scan a food product photo to see its nutrition, eco-score, and greener alternatives. Built with React, FastAPI, Gemini Vision, and Actian VectorDB.
 
+## What is This?
+
+ShelfScan is a web app that helps you make smarter food choices. Point your camera at any food product, and it will:
+
+1. **Identify the product** using Gemini Vision AI
+2. **Look it up** in a database of thousands of real products from OpenFoodFacts
+3. **Show you what's inside** — nutrition facts, Nutri-Score, and Eco-Score in plain language
+4. **Suggest greener alternatives** with better environmental ratings
+
+### How it Works
+
+```
+You snap a photo
+  → Gemini Vision identifies the product
+  → Product name gets embedded into a vector
+  → Actian VectorDB finds the closest match in our database
+  → You see nutrition, eco-score, and AI-generated explanations
+  → One tap to find greener alternatives
+```
+
+The backend pairs Gemini 2.5 Flash (for vision and natural-language explanations) with a local sentence-transformers model (for vector embeddings) and Actian VectorDB (for fast similarity search). The product database is sourced from OpenFoodFacts via HuggingFace — ~2,000 products ranked by data completeness.
+
+No accounts, no tracking. Your scan history stays in your browser's local storage.
+
+Built for **SF Hacks 2026**.
+
 ## Prerequisites
 
 - Python 3.10+
