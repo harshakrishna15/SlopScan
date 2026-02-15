@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from services import gemini
 from services.embeddings import embed_texts_batch
 from services.actian import actian_client
@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.post("/identify")
-async def identify(image: UploadFile = File(...)):
+async def identify(image: UploadFile = File(...), skip_explanation: bool = Query(False)):
     image_bytes = await image.read()
     if not image_bytes:
         raise HTTPException(status_code=400, detail="Empty image file")
@@ -151,9 +151,9 @@ async def identify(image: UploadFile = File(...)):
         for c in candidates
     ]
 
-    # Generate explanation for the best match to reduce API calls
+    # Generate explanation for the best match (skipped when mobile passes skip_explanation=true)
     best_match_explanation = None
-    if best_match and candidates:
+    if not skip_explanation and best_match and candidates:
         try:
             from routers.explain import _explain_product
             best_match_explanation = await _explain_product(candidates[0])

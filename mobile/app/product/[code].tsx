@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getProduct, getExplanation, getExplanationFromProduct } from '../../lib/api';
-import { getStoredProduct, getStoredExplanation, storeProduct } from '../../lib/store';
+import { getStoredProduct, storeProduct } from '../../lib/store';
 import { saveScanHistory } from '../../lib/history';
 import type { Product, ExplanationResponse } from '../../lib/types';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -43,15 +43,9 @@ export default function ProductDetailScreen() {
       .finally(() => setLoading(false));
   }, [code]);
 
-  // Fetch explanation
+  // Always fetch explanation lazily after product is loaded
   useEffect(() => {
     if (!code || !product) return;
-
-    const stored = getStoredExplanation(code);
-    if (stored) {
-      setExplanation(stored);
-      return;
-    }
 
     const request = product
       ? getExplanationFromProduct(product)

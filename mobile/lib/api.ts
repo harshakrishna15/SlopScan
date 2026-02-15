@@ -19,7 +19,7 @@ export async function identifyProduct(imageUri: string): Promise<IdentifyRespons
     name: 'capture.jpg',
   } as any);
 
-  const res = await fetch(`${getBaseUrl()}/api/identify`, {
+  const res = await fetch(`${getBaseUrl()}/api/identify?skip_explanation=true`, {
     method: 'POST',
     body: formData,
     headers: {

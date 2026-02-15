@@ -56,27 +56,26 @@ export default function ScanTab() {
 
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing}>
-        <View style={styles.overlay}>
-          <View style={styles.topBar}>
-            <Text style={styles.hint}>Point at a food product</Text>
-          </View>
-          <View style={styles.controls}>
-            <Pressable style={styles.galleryButton} onPress={handlePickImage}>
-              <Ionicons name="images-outline" size={24} color="#ffffff" />
-            </Pressable>
-            <Pressable style={styles.captureButton} onPress={handleCapture}>
-              <View style={styles.captureInner} />
-            </Pressable>
-            <Pressable
-              style={styles.galleryButton}
-              onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-            >
-              <Ionicons name="camera-reverse-outline" size={24} color="#ffffff" />
-            </Pressable>
-          </View>
+      <CameraView ref={cameraRef} style={styles.camera} facing={facing} zoom={0} />
+      <View style={styles.overlay}>
+        <View style={styles.topBar}>
+          <Text style={styles.hint}>Point at a food product</Text>
         </View>
-      </CameraView>
+        <View style={styles.controls}>
+          <Pressable style={styles.galleryButton} onPress={handlePickImage}>
+            <Ionicons name="images-outline" size={24} color="#ffffff" />
+          </Pressable>
+          <Pressable style={styles.captureButton} onPress={handleCapture}>
+            <View style={styles.captureInner} />
+          </Pressable>
+          <Pressable
+            style={styles.galleryButton}
+            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+          >
+            <Ionicons name="camera-reverse-outline" size={24} color="#ffffff" />
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
@@ -90,7 +89,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'space-between',
   },
   topBar: {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { identifyProduct } from '../lib/api';
-import { storeProduct, storeExplanation } from '../lib/store';
+import { storeProduct } from '../lib/store';
 import type { IdentifyResponse } from '../lib/types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProductCard from '../components/ProductCard';
@@ -28,9 +28,6 @@ export default function ResultsScreen() {
         if (!data.needs_confirmation && data.best_match && data.candidates.length > 0) {
           const product = data.candidates[0];
           storeProduct(data.best_match.product_code, product);
-          if (data.best_match_explanation) {
-            storeExplanation(data.best_match.product_code, data.best_match_explanation);
-          }
           router.replace(`/product/${data.best_match.product_code}`);
         }
       })
