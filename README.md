@@ -1,10 +1,10 @@
-# ShelfScan
+# SlopScan
 
 Scan a food product photo to see its nutrition, eco-score, and greener alternatives. Built with React, FastAPI, Gemini Vision, and Actian VectorDB.
 
 ## What is This?
 
-ShelfScan is a web app that helps you make smarter food choices. Point your camera at any food product, and it will:
+SlopScan is a web app that helps you make smarter food choices. Point your camera at any food product, and it will:
 
 1. **Identify the product** using Gemini Vision AI
 2. **Look it up** in a database of thousands of real products from OpenFoodFacts
