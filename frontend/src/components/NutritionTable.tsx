@@ -31,7 +31,7 @@ export default function NutritionTable({ nutrition }: { nutrition: Nutrition }) 
             <tr key={row.label} className="border-t border-[#edf2ec]">
               <td className="px-4 py-2.5 text-[var(--ink-700)]">{row.label}</td>
               <td className="px-4 py-2.5 text-right font-semibold text-[var(--ink-900)]">
-                {row.value != null ? `${row.value} ${row.unit}` : '—'}
+                {row.value != null ? `${Math.round(row.value * 10) / 10} ${row.unit}` : '—'}
               </td>
             </tr>
           ))}

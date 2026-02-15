@@ -15,7 +15,7 @@ from datasets import load_dataset
 
 
 OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json")
-TARGET_COUNT = 10_000
+TARGET_COUNT = 10000
 
 
 def _to_str(val) -> str:
@@ -102,13 +102,37 @@ def extract_product(row: dict) -> dict | None:
     elif ecoscore_grade:
         ecoscore_grade = ecoscore_grade.lower()
 
-    # Parse nutriments
-    nutriments = row.get("nutriments") or {}
-    if isinstance(nutriments, str):
+    # Parse nutriments - OpenFoodFacts dataset can have it as:
+    # 1. A dict: {"energy-kcal_100g": 100, "sugars_100g": 5, ...}
+    # 2. A list: [{"name": "energy-kcal", "100g": 100, ...}, ...]
+    # 3. A JSON string of either format
+    nutriments_raw = row.get("nutriments") or {}
+    nutriments = {}
+    
+    if isinstance(nutriments_raw, str):
         try:
-            nutriments = json.loads(nutriments)
+            nutriments_raw = json.loads(nutriments_raw)
         except (json.JSONDecodeError, TypeError):
-            nutriments = {}
+            nutriments_raw = {}
+    
+    if isinstance(nutriments_raw, dict):
+        # Already in the right format
+        nutriments = nutriments_raw
+    elif isinstance(nutriments_raw, list):
+        # Convert list format to dict format
+        # List entries look like: {"name": "energy-kcal", "100g": 267.0, "serving": 4.0, ...}
+        # We want: {"energy-kcal_100g": 267.0, ...}
+        for entry in nutriments_raw:
+            if not isinstance(entry, dict):
+                continue
+            name = entry.get("name")
+            value_100g = entry.get("100g")
+            if name and value_100g is not None:
+                # Normalize the key format (e.g., "energy-kcal" -> "energy-kcal_100g")
+                key = f"{name}_100g"
+                nutriments[key] = value_100g
+    
+    # Ensure it's a dict
     if not isinstance(nutriments, dict):
         nutriments = {}
 
