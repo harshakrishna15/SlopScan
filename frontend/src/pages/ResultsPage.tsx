@@ -34,7 +34,10 @@ export default function ResultsPage() {
         if (!data.needs_confirmation && data.best_match && data.candidates.length > 0) {
           navigate(`/product/${data.best_match.product_code}`, {
             replace: true,
-            state: { product: data.candidates[0] },
+            state: {
+              product: data.candidates[0],
+              explanation: data.best_match_explanation
+            },
           });
         }
       })

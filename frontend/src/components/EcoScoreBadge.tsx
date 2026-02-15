@@ -10,10 +10,12 @@ export default function EcoScoreBadge({
   grade,
   score,
   size = 'md',
+  predicted = false,
 }: {
   grade: string | null;
   score?: number | null;
   size?: 'sm' | 'md' | 'lg';
+  predicted?: boolean;
 }) {
   if (!grade) {
     return (
@@ -36,6 +38,7 @@ export default function EcoScoreBadge({
     <span className={`inline-flex items-center gap-1 rounded-full border border-black/5 font-extrabold uppercase shadow-sm ${colorClass} ${sizeClasses[size]}`}>
       {g}
       {score != null && <span className="font-normal opacity-80">({score})</span>}
+      {predicted && <span className="ml-1 text-xs font-normal opacity-90" title="AI predicted score based on ingredients and nutrition">🤖</span>}
     </span>
   );
 }
