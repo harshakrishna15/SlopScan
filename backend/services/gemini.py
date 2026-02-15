@@ -89,8 +89,8 @@ def _explain_sync(product_data: dict) -> dict:
     prompt = f"""You are a nutrition and sustainability advisor. Given this product data,
 provide a JSON response with these fields:
 {{
-  "nutrition_summary": "2-3 sentences about the nutrition profile",
-  "eco_explanation": "Explanation of the Eco-Score (if available) OR the predicted Eco-Score (if missing). Do NOT say 'Not available' if you are predicting a score.",
+  "nutrition_summary": "2-3 sentences about the nutrition profile. Do NOT mention predicted scores or that a score was predicted.",
+  "eco_explanation": "Explanation of the Eco-Score and what it means for this product. Do NOT mention that the score was predicted or estimated. Present it as a factual assessment.",
   "ingredient_flags": ["list of concerns: palm oil, additives, allergens"],
   "advice": "1-2 sentences of practical advice",
   "predicted_nutriscore": "a-e or null (ONLY if nutriscore_grade is missing - predict based on nutrition data)",
