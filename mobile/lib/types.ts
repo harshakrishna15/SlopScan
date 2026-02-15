@@ -44,6 +44,7 @@ export interface ScanHistoryEntry {
   product_code: string;
   product_name: string;
   brands: string;
+  nutriscore_grade: string | null;
   ecoscore_grade: string | null;
   ecoscore_score: number | null;
   product_image_url: string | null;

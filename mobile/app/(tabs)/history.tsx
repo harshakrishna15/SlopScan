@@ -3,34 +3,38 @@ import { View, Text, FlatList, Pressable, StyleSheet, Alert } from 'react-native
 import { Image } from 'expo-image';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import type { ScanHistoryEntry } from '../../lib/types';
+import type { ScanHistoryEntry, ExplanationResponse } from '../../lib/types';
 import { getScanHistory, deleteScanHistoryItem, clearScanHistory } from '../../lib/history';
-import { storeProduct } from '../../lib/store';
+import { storeProduct, getPersistedExplanation } from '../../lib/store';
 import EcoScoreBadge from '../../components/EcoScoreBadge';
 import { Colors } from '../../constants/colors';
 
 export default function HistoryTab() {
   const router = useRouter();
   const [history, setHistory] = useState<ScanHistoryEntry[]>([]);
+  const [explanations, setExplanations] = useState<Record<string, ExplanationResponse>>({});
 
   useFocusEffect(
     useCallback(() => {
-      getScanHistory().then(setHistory);
+      getScanHistory().then((entries) => {
+        setHistory(entries);
+        // Load cached AI explanations for entries missing scores
+        entries.forEach((entry) => {
+          if (!entry.nutriscore_grade || !entry.ecoscore_grade) {
+            getPersistedExplanation(entry.product_code).then((exp) => {
+              if (exp) {
+                setExplanations((prev) => ({ ...prev, [entry.product_code]: exp }));
+              }
+            });
+          }
+        });
+      });
     }, [])
   );
 
-  const handleDelete = (id: string) => {
-    Alert.alert('Delete', 'Remove this scan from history?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteScanHistoryItem(id);
-          setHistory((prev) => prev.filter((item) => item.id !== id));
-        },
-      },
-    ]);
+  const handleDelete = async (id: string) => {
+    await deleteScanHistoryItem(id);
+    setHistory((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleClearAll = () => {
@@ -51,41 +55,48 @@ export default function HistoryTab() {
     if (entry.product) {
       storeProduct(entry.product_code, entry.product);
     }
-    router.push(`/product/${entry.product_code}`);
+    router.push({ pathname: `/product/${entry.product_code}`, params: { fromHistory: '1' } });
   };
 
-  const renderItem = ({ item }: { item: ScanHistoryEntry }) => (
-    <Pressable
-      onPress={() => handlePress(item)}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-    >
-      {item.product_image_url ? (
-        <Image
-          source={{ uri: item.product_image_url }}
-          style={styles.image}
-          contentFit="cover"
-          transition={200}
-        />
-      ) : (
-        <View style={styles.placeholder}>
-          <Ionicons name="cube-outline" size={24} color={Colors.ink[400]} />
+  const renderItem = ({ item }: { item: ScanHistoryEntry }) => {
+    const exp = explanations[item.product_code];
+    const nutriGrade = item.nutriscore_grade || exp?.predicted_nutriscore || null;
+    const ecoGrade = item.ecoscore_grade || exp?.predicted_ecoscore || null;
+
+    return (
+      <Pressable
+        onPress={() => handlePress(item)}
+        style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      >
+        {item.product_image_url ? (
+          <Image
+            source={{ uri: item.product_image_url }}
+            style={styles.image}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={styles.placeholder}>
+            <Ionicons name="cube-outline" size={24} color={Colors.ink[400]} />
+          </View>
+        )}
+        <View style={styles.info}>
+          <Text style={styles.name} numberOfLines={1}>{item.product_name}</Text>
+          {item.brands ? <Text style={styles.brands} numberOfLines={1}>{item.brands}</Text> : null}
+          <Text style={styles.date}>
+            {new Date(item.saved_at).toLocaleDateString()}
+          </Text>
         </View>
-      )}
-      <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>{item.product_name}</Text>
-        {item.brands ? <Text style={styles.brands} numberOfLines={1}>{item.brands}</Text> : null}
-        <Text style={styles.date}>
-          {new Date(item.saved_at).toLocaleDateString()}
-        </Text>
-      </View>
-      <View style={styles.actions}>
-        <EcoScoreBadge grade={item.ecoscore_grade} size="sm" />
-        <Pressable onPress={() => handleDelete(item.id)} hitSlop={8}>
-          <Ionicons name="trash-outline" size={18} color={Colors.ink[400]} />
-        </Pressable>
-      </View>
-    </Pressable>
-  );
+        <View style={styles.actions}>
+          <EcoScoreBadge grade={nutriGrade} size="sm" />
+          <EcoScoreBadge grade={ecoGrade} size="sm" />
+          <Pressable onPress={() => handleDelete(item.id)} hitSlop={8}>
+            <Ionicons name="trash-outline" size={18} color={Colors.ink[400]} />
+          </Pressable>
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
     <View style={styles.container}>

@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getProduct, getExplanation, getExplanationFromProduct } from '../../lib/api';
-import { getStoredProduct, storeProduct } from '../../lib/store';
+import { getStoredProduct, storeProduct, getPersistedExplanation, storeExplanation } from '../../lib/store';
 import { saveScanHistory } from '../../lib/history';
 import type { Product, ExplanationResponse } from '../../lib/types';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -13,7 +13,7 @@ import NutritionTable from '../../components/NutritionTable';
 import { Colors } from '../../constants/colors';
 
 export default function ProductDetailScreen() {
-  const { code } = useLocalSearchParams<{ code: string }>();
+  const { code, fromHistory } = useLocalSearchParams<{ code: string; fromHistory?: string }>();
   const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [explanation, setExplanation] = useState<ExplanationResponse | null>(null);
@@ -43,22 +43,38 @@ export default function ProductDetailScreen() {
       .finally(() => setLoading(false));
   }, [code]);
 
-  // Always fetch explanation lazily after product is loaded
+  // Load explanation: check persistent cache first, then fetch from API
   useEffect(() => {
     if (!code || !product) return;
 
-    const request = product
-      ? getExplanationFromProduct(product)
-      : getExplanation(code);
+    let cancelled = false;
 
-    request
-      .then(setExplanation)
-      .catch(() => setExplanation(null));
+    (async () => {
+      const cached = await getPersistedExplanation(code);
+      if (cached && !cancelled) {
+        setExplanation(cached);
+        return;
+      }
+
+      try {
+        const result = await (product
+          ? getExplanationFromProduct(product)
+          : getExplanation(code));
+        if (!cancelled) {
+          setExplanation(result);
+          storeExplanation(code, result);
+        }
+      } catch {
+        if (!cancelled) setExplanation(null);
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, [code, product]);
 
-  // Save to history
+  // Save to history (skip if navigated from history page)
   useEffect(() => {
-    if (!product || historySavedRef.current) return;
+    if (!product || historySavedRef.current || fromHistory === '1') return;
     historySavedRef.current = true;
     saveScanHistory(product);
   }, [product]);
