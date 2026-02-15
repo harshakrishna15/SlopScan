@@ -15,7 +15,7 @@ from datasets import load_dataset
 
 
 OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json")
-TARGET_COUNT = 10000
+TARGET_COUNT = 500000
 
 
 def _to_str(val) -> str:
