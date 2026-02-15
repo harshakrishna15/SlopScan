@@ -37,6 +37,12 @@ export async function getRecommendationsFromProduct(product: Product): Promise<P
 }
 
 function _parseExplanation(raw: Record<string, unknown>): ExplanationResponse {
+  const normalizeGrade = (value: unknown): string | null => {
+    if (typeof value !== 'string') return null;
+    const g = value.trim().toLowerCase();
+    return ['a', 'b', 'c', 'd', 'e'].includes(g) ? g : null;
+  };
+
   return {
     nutrition_summary: typeof raw?.nutrition_summary === 'string' ? raw.nutrition_summary : 'No nutrition summary available.',
     eco_explanation: typeof raw?.eco_explanation === 'string' ? raw.eco_explanation : 'Eco explanation unavailable.',
@@ -44,6 +50,8 @@ function _parseExplanation(raw: Record<string, unknown>): ExplanationResponse {
       ? raw.ingredient_flags.filter((f: unknown) => typeof f === 'string')
       : [],
     advice: typeof raw?.advice === 'string' ? raw.advice : 'No advice available.',
+    predicted_nutriscore: normalizeGrade(raw?.predicted_nutriscore),
+    predicted_ecoscore: normalizeGrade(raw?.predicted_ecoscore),
   };
 }
 

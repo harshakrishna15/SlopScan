@@ -30,6 +30,7 @@ class ExplainRequest(BaseModel):
     product_name: str
     brands: str | None = None
     categories: str | None = None
+    nutriscore_grade: str | None = None
     ecoscore_grade: str | None = None
     ecoscore_score: float | None = None
     nutrition_json: str | None = None

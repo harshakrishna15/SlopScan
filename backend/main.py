@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
         pass
 
 
-app = FastAPI(title="ShelfScan API", lifespan=lifespan)
+app = FastAPI(title="SlopScan API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,8 +1,8 @@
-# ShelfScan - Project Context
+# SlopScan - Project Context
 
 ## What This Is
 
-ShelfScan is a hackathon project (SF Hacks 2026). User takes a photo of a food product → Gemini Vision identifies it → matches against OpenFoodFacts products stored in Actian VectorDB → shows nutrition, eco-score, and greener alternatives.
+SlopScan is a hackathon project (SF Hacks 2026). User takes a photo of a food product → Gemini Vision identifies it → matches against OpenFoodFacts products stored in Actian VectorDB → shows nutrition, eco-score, and greener alternatives.
 
 ## Architecture
 
