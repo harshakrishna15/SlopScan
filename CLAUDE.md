@@ -15,7 +15,7 @@ Photo → Gemini Vision API → product name guesses
 
 ## Key Tech Decisions
 
-- **Gemini 2.0 Flash** for vision (product identification) and text (explanations). Requires API key in `backend/.env`.
+- **Gemini 2.5 Flash** for vision (product identification) and text (explanations). Requires API key in `backend/.env`.
 - **sentence-transformers (all-MiniLM-L6-v2)** for embeddings. Runs locally, no API needed. 384-dim vectors.
 - **Actian VectorDB** via Docker on `localhost:50051`. Uses `cortex` Python client (gRPC). SDK wheel is in `actian-vectordb/`. No built-in vectorization — it's a pure vector store.
 - **OpenFoodFacts** dataset from HuggingFace (`openfoodfacts/product-database`, `split="food"`). Streamed, capped at 10k rows scanned, top 2000 kept by completeness score.

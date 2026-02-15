@@ -83,19 +83,19 @@ Open http://localhost:5173
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/identify` | Upload a photo to identify a product |
-| GET | `/api/product/{code}` | Get full product details |
-| GET | `/api/recommend/{code}` | Get greener alternatives |
-| GET | `/api/explain/{code}` | Get AI nutrition/eco analysis |
-| GET | `/api/health` | Health check |
+| Method | Endpoint                | Description                          |
+| ------ | ----------------------- | ------------------------------------ |
+| POST   | `/api/identify`         | Upload a photo to identify a product |
+| GET    | `/api/product/{code}`   | Get full product details             |
+| GET    | `/api/recommend/{code}` | Get greener alternatives             |
+| GET    | `/api/explain/{code}`   | Get AI nutrition/eco analysis        |
+| GET    | `/api/health`           | Health check                         |
 
 ## Tech Stack
 
 - **Frontend**: React, Vite, Tailwind CSS, react-webcam
 - **Backend**: Python FastAPI
-- **Product ID**: Gemini 2.0 Flash (Vision)
+- **Product ID**: Gemini 2.5 Flash (Vision)
 - **Embeddings**: sentence-transformers (all-MiniLM-L6-v2, local)
 - **Vector DB**: Actian VectorDB
 - **Data**: OpenFoodFacts (via HuggingFace)
