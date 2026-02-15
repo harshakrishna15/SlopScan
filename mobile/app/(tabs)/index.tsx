@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useState, useRef, useCallback } from 'react';
+import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +12,38 @@ export default function ScanTab() {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [facing, setFacing] = useState<'back' | 'front'>('back');
+  const [selectedLens, setSelectedLens] = useState<string | undefined>(undefined);
+  const [zoom, setZoom] = useState(0);
+  const zoomAtPinchStart = useRef(0);
+
+  const pinchGesture = Gesture.Pinch()
+    .onBegin(() => {
+      zoomAtPinchStart.current = zoom;
+    })
+    .onUpdate((e) => {
+      const delta = (e.scale - 1) * 0.35;
+      const next = Math.min(1, Math.max(0, zoomAtPinchStart.current + delta));
+      setZoom(next);
+    });
+
+  // On iOS devices with ultra-wide cameras, the default virtual device starts at 0.5x.
+  // We select the standard wide-angle ("Back Camera") to ensure 1x by default.
+  const handleAvailableLensesChanged = useCallback((event: { lenses: string[] }) => {
+    if (facing !== 'back') return;
+    const lenses = event.lenses;
+    // "Back Camera" is the localizedName for builtInWideAngleCamera on iOS
+    const wideAngle = lenses.find(name => name === 'Back Camera')
+      ?? lenses.find(name =>
+        name.includes('Back') &&
+        !name.includes('Ultra') &&
+        !name.includes('Telephoto') &&
+        !name.includes('Dual') &&
+        !name.includes('Triple')
+      );
+    if (wideAngle && Platform.OS === 'ios') {
+      setSelectedLens(wideAngle);
+    }
+  }, [facing]);
 
   const handleCapture = async () => {
     if (!cameraRef.current) return;
@@ -55,28 +88,41 @@ export default function ScanTab() {
   }
 
   return (
-    <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing={facing} zoom={0} />
-      <View style={styles.overlay}>
-        <View style={styles.topBar}>
-          <Text style={styles.hint}>Point at a food product</Text>
-        </View>
-        <View style={styles.controls}>
-          <Pressable style={styles.galleryButton} onPress={handlePickImage}>
-            <Ionicons name="images-outline" size={24} color="#ffffff" />
-          </Pressable>
-          <Pressable style={styles.captureButton} onPress={handleCapture}>
-            <View style={styles.captureInner} />
-          </Pressable>
-          <Pressable
-            style={styles.galleryButton}
-            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-          >
-            <Ionicons name="camera-reverse-outline" size={24} color="#ffffff" />
-          </Pressable>
+    <GestureDetector gesture={pinchGesture}>
+      <View style={styles.container}>
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing={facing}
+          zoom={zoom}
+          selectedLens={selectedLens}
+          onAvailableLensesChanged={handleAvailableLensesChanged}
+        />
+        <View style={styles.overlay}>
+          <View style={styles.topBar}>
+            <Text style={styles.hint}>Point at a food product</Text>
+          </View>
+          <View style={styles.controls}>
+            <Pressable style={styles.galleryButton} onPress={handlePickImage}>
+              <Ionicons name="images-outline" size={24} color="#ffffff" />
+            </Pressable>
+            <Pressable style={styles.captureButton} onPress={handleCapture}>
+              <View style={styles.captureInner} />
+            </Pressable>
+            <Pressable
+              style={styles.galleryButton}
+              onPress={() => {
+                setFacing((f) => (f === 'back' ? 'front' : 'back'));
+                setSelectedLens(undefined);
+                setZoom(0);
+              }}
+            >
+              <Ionicons name="camera-reverse-outline" size={24} color="#ffffff" />
+            </Pressable>
+          </View>
         </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 }
 
