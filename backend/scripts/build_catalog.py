@@ -12,10 +12,17 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from datasets import load_dataset
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json")
-TARGET_COUNT = 10_000
+OUTPUT_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json"
+)
+TARGET_COUNT = 200000
+HF_TOKEN = os.getenv("HF_TOKEN", "").strip() or None
+
 
 def _to_str(val) -> str:
     """Convert a value to a clean string. Handles the OpenFoodFacts format
@@ -40,7 +47,7 @@ def _to_str(val) -> str:
 
 def _clean_text(text: str) -> str:
     """Strip HTML tags and clean up text."""
-    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r"<[^>]+>", "", text)
     return text.strip()
 
 
@@ -112,13 +119,13 @@ def extract_product(row: dict) -> dict | None:
     # 3. A JSON string of either format
     nutriments_raw = row.get("nutriments") or {}
     nutriments = {}
-    
+
     if isinstance(nutriments_raw, str):
         try:
             nutriments_raw = json.loads(nutriments_raw)
         except (json.JSONDecodeError, TypeError):
             nutriments_raw = {}
-    
+
     if isinstance(nutriments_raw, dict):
         # Already in the right format
         nutriments = nutriments_raw
@@ -135,7 +142,7 @@ def extract_product(row: dict) -> dict | None:
                 # Normalize the key format (e.g., "energy-kcal" -> "energy-kcal_100g")
                 key = f"{name}_100g"
                 nutriments[key] = value_100g
-    
+
     # Ensure it's a dict
     if not isinstance(nutriments, dict):
         nutriments = {}
@@ -154,23 +161,36 @@ def extract_product(row: dict) -> dict | None:
         "link": row.get("link") or None,
         "lang": row.get("lang") or None,
         "languages_tags": _normalize_list(row.get("languages_tags")),
-
         # --- Ingredients ---
         "ingredients": _serialize_value(row.get("ingredients")),
         "ingredients_text": _to_str(row.get("ingredients_text")).strip(),
         "ingredients_tags": _normalize_list(row.get("ingredients_tags")),
-        "ingredients_original_tags": _normalize_list(row.get("ingredients_original_tags")),
+        "ingredients_original_tags": _normalize_list(
+            row.get("ingredients_original_tags")
+        ),
         "ingredients_n": _safe_int(row.get("ingredients_n")),
-        "ingredients_analysis_tags": _normalize_list(row.get("ingredients_analysis_tags")),
-        "ingredients_percent_analysis": _safe_int(row.get("ingredients_percent_analysis")),
-        "ingredients_with_specified_percent_n": _safe_int(row.get("ingredients_with_specified_percent_n")),
-        "ingredients_with_unspecified_percent_n": _safe_int(row.get("ingredients_with_unspecified_percent_n")),
-        "ingredients_without_ciqual_codes_n": _safe_int(row.get("ingredients_without_ciqual_codes_n")),
-        "ingredients_without_ciqual_codes": _normalize_list(row.get("ingredients_without_ciqual_codes")),
-        "ingredients_from_palm_oil_n": _safe_int(row.get("ingredients_from_palm_oil_n")) or 0,
+        "ingredients_analysis_tags": _normalize_list(
+            row.get("ingredients_analysis_tags")
+        ),
+        "ingredients_percent_analysis": _safe_int(
+            row.get("ingredients_percent_analysis")
+        ),
+        "ingredients_with_specified_percent_n": _safe_int(
+            row.get("ingredients_with_specified_percent_n")
+        ),
+        "ingredients_with_unspecified_percent_n": _safe_int(
+            row.get("ingredients_with_unspecified_percent_n")
+        ),
+        "ingredients_without_ciqual_codes_n": _safe_int(
+            row.get("ingredients_without_ciqual_codes_n")
+        ),
+        "ingredients_without_ciqual_codes": _normalize_list(
+            row.get("ingredients_without_ciqual_codes")
+        ),
+        "ingredients_from_palm_oil_n": _safe_int(row.get("ingredients_from_palm_oil_n"))
+        or 0,
         "known_ingredients_n": _safe_int(row.get("known_ingredients_n")),
         "unknown_ingredients_n": _safe_int(row.get("unknown_ingredients_n")),
-
         # --- Nutrition (full raw nutriments + parsed summary) ---
         "nutriments": nutriments,
         "nutrition_data_per": row.get("nutrition_data_per") or None,
@@ -181,7 +201,6 @@ def extract_product(row: dict) -> dict | None:
         "nova_group": _safe_int(row.get("nova_group")),
         "nova_groups": row.get("nova_groups") or None,
         "nova_groups_tags": _normalize_list(row.get("nova_groups_tags")),
-
         # --- Allergens & additives ---
         "allergens_tags": _normalize_list(row.get("allergens_tags")),
         "additives_n": _safe_int(row.get("additives_n")),
@@ -189,18 +208,17 @@ def extract_product(row: dict) -> dict | None:
         "new_additives_n": _safe_int(row.get("new_additives_n")),
         "traces_tags": _normalize_list(row.get("traces_tags")),
         "with_sweeteners": _safe_int(row.get("with_sweeteners")),
-        "with_non_nutritive_sweeteners": _safe_int(row.get("with_non_nutritive_sweeteners")),
-
+        "with_non_nutritive_sweeteners": _safe_int(
+            row.get("with_non_nutritive_sweeteners")
+        ),
         # --- Labels & certifications ---
         "labels": _to_str(row.get("labels")).strip(),
         "labels_tags": _normalize_list(row.get("labels_tags")),
-
         # --- Eco-score ---
         "ecoscore_grade": ecoscore_grade,
         "ecoscore_score": _safe_int(row.get("ecoscore_score")),
         "ecoscore_data": _serialize_value(row.get("ecoscore_data")),
         "ecoscore_tags": _normalize_list(row.get("ecoscore_tags")),
-
         # --- Packaging ---
         "packaging": _to_str(row.get("packaging")).strip(),
         "packaging_text": _to_str(row.get("packaging_text")).strip(),
@@ -208,41 +226,44 @@ def extract_product(row: dict) -> dict | None:
         "packagings_complete": _safe_int(row.get("packagings_complete")),
         "packaging_tags": _normalize_list(row.get("packaging_tags")),
         "packaging_shapes_tags": _normalize_list(row.get("packaging_shapes_tags")),
-        "packaging_recycling_tags": _normalize_list(row.get("packaging_recycling_tags")),
-
+        "packaging_recycling_tags": _normalize_list(
+            row.get("packaging_recycling_tags")
+        ),
         # --- Geographic & origin ---
         "countries_tags": _normalize_list(row.get("countries_tags")),
         "main_countries_tags": _normalize_list(row.get("main_countries_tags")),
         "origins": _to_str(row.get("origins")).strip(),
         "origins_tags": _normalize_list(row.get("origins_tags")),
         "manufacturing_places": _to_str(row.get("manufacturing_places")).strip(),
-        "manufacturing_places_tags": _normalize_list(row.get("manufacturing_places_tags")),
+        "manufacturing_places_tags": _normalize_list(
+            row.get("manufacturing_places_tags")
+        ),
         "purchase_places_tags": _normalize_list(row.get("purchase_places_tags")),
         "cities_tags": _normalize_list(row.get("cities_tags")),
         "emb_codes": row.get("emb_codes") or None,
         "emb_codes_tags": _normalize_list(row.get("emb_codes_tags")),
-
         # --- Images ---
         "images": _serialize_value(row.get("images")),
         "image_front_url": row.get("image_front_url") or row.get("image_url") or None,
         "max_imgid": _safe_int(row.get("max_imgid")),
         "last_image_t": _safe_int(row.get("last_image_t")),
-
         # --- Quantity & serving ---
         "quantity": _to_str(row.get("quantity")).strip(),
         "product_quantity": _safe_float(row.get("product_quantity")),
         "product_quantity_unit": row.get("product_quantity_unit") or None,
         "serving_size": _to_str(row.get("serving_size")).strip(),
         "serving_quantity": _safe_float(row.get("serving_quantity")),
-
         # --- Completeness & data quality ---
         "complete": _safe_int(row.get("complete")),
         "completeness": _safe_float(row.get("completeness")),
-        "data_quality_errors_tags": _normalize_list(row.get("data_quality_errors_tags")),
-        "data_quality_warnings_tags": _normalize_list(row.get("data_quality_warnings_tags")),
+        "data_quality_errors_tags": _normalize_list(
+            row.get("data_quality_errors_tags")
+        ),
+        "data_quality_warnings_tags": _normalize_list(
+            row.get("data_quality_warnings_tags")
+        ),
         "data_quality_info_tags": _normalize_list(row.get("data_quality_info_tags")),
         "states_tags": _normalize_list(row.get("states_tags")),
-
         # --- Stores & distribution ---
         "stores": _to_str(row.get("stores")).strip(),
         "stores_tags": _normalize_list(row.get("stores_tags")),
@@ -251,7 +272,6 @@ def extract_product(row: dict) -> dict | None:
         "popularity_tags": _normalize_list(row.get("popularity_tags")),
         "scans_n": _safe_int(row.get("scans_n")),
         "unique_scans_n": _safe_int(row.get("unique_scans_n")),
-
         # --- Food classification ---
         "food_groups_tags": _normalize_list(row.get("food_groups_tags")),
         "ciqual_food_name_tags": _normalize_list(row.get("ciqual_food_name_tags")),
@@ -260,7 +280,6 @@ def extract_product(row: dict) -> dict | None:
         "nucleotides_tags": _normalize_list(row.get("nucleotides_tags")),
         "misc_tags": _normalize_list(row.get("misc_tags")),
         "data_sources_tags": _normalize_list(row.get("data_sources_tags")),
-
         # --- Contributors & timestamps ---
         "creator": row.get("creator") or None,
         "created_t": _safe_int(row.get("created_t")),
@@ -294,12 +313,17 @@ def compute_completeness(product: dict) -> int:
 def main():
     print("Loading OpenFoodFacts dataset from HuggingFace...")
     print("(This may take a while on first run as it downloads the data)")
+    if HF_TOKEN:
+        print("Using authenticated HuggingFace access via HF_TOKEN.")
+    else:
+        print("HF_TOKEN not set; using unauthenticated HuggingFace access.")
 
     # Load a subset — the full dataset is huge, so we stream and take what we need
     ds = load_dataset(
         "openfoodfacts/product-database",
         split="food",
         streaming=True,
+        token=HF_TOKEN,
     )
 
     products = []

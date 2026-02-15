@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trash2, X, Calendar } from 'lucide-react';
 import EcoScoreBadge from '../components/EcoScoreBadge';
 import { clearScanHistory, deleteScanHistoryItem, getScanHistory } from '../lib/history';
+import { getUnifiedCategory } from '../lib/categoryIcon';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -53,9 +54,18 @@ export default function HistoryPage() {
                       className="h-24 w-24 flex-shrink-0 rounded-xl border border-[var(--line-soft)] object-cover"
                     />
                   ) : (
-                    <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-3xl">
-                      🛒
-                    </div>
+                    (() => {
+                      const { Icon } = getUnifiedCategory(
+                        item.product?.categories || '',
+                        item.product?.categories_tags,
+                        item.product_name,
+                      );
+                      return (
+                        <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-[var(--ink-600)]">
+                          <Icon className="h-9 w-9" />
+                        </div>
+                      );
+                    })()
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate pr-8 font-semibold text-[var(--ink-900)]">{item.product_name}</p>

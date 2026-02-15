@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EcoScoreBadge from '../components/EcoScoreBadge';
 import NutritionTable from '../components/NutritionTable';
 import { saveScanHistory } from '../lib/history';
+import { getUnifiedCategory } from '../lib/categoryIcon';
 
 export default function ProductDetailPage() {
   const { code } = useParams<{ code: string }>();
@@ -122,6 +123,11 @@ export default function ProductDetailPage() {
   } else {
     nutrition = product.nutrition_json || {};
   }
+  const { Icon: CategoryIcon } = getUnifiedCategory(
+    product.categories || '',
+    product.categories_tags,
+    product.product_name,
+  );
 
   return (
     <div className="min-h-screen px-4 py-8 pb-24">
@@ -135,7 +141,9 @@ export default function ProductDetailPage() {
             {product.image_url ? (
               <img src={product.image_url} alt={product.product_name} className="h-20 w-20 rounded-2xl border border-white/60 object-cover shadow-sm" />
             ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-3xl">🛒</div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-[var(--line-soft)] bg-[var(--surface-100)] text-[var(--ink-600)]">
+                <CategoryIcon className="h-9 w-9" />
+              </div>
             )}
             <div className="flex-1">
               <h1 className="hero-title text-3xl leading-tight text-[var(--ink-900)]">{product.product_name}</h1>

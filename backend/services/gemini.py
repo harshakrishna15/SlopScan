@@ -40,10 +40,11 @@ def _identify_sync(image_bytes: bytes) -> dict:
             },
             (
                 "You are a food product identifier. Look at this photo of a food product package. "
-                "Return a JSON object with two fields:\n"
+                "Return a JSON object with three fields:\n"
                 "1. 'guesses': A JSON array of 3-5 possible product names (including brand) IN ENGLISH, from most to least likely.\n"
                 "2. 'brand': The most likely brand name detected (e.g. 'Coca-Cola', 'Nestle') IN ENGLISH.\n"
-                'Example: {"guesses": ["Nutella Hazelnut Spread", "Nutella & Go"], "brand": "Ferrero"}\n'
+                "3. 'front_text': Key visible front-label text from the package (OCR-like), as a short string IN ENGLISH.\n"
+                'Example: {"guesses": ["Nutella Hazelnut Spread", "Nutella & Go"], "brand": "Ferrero", "front_text": "nutella hazelnut spread"}\n'
                 "Prioritize English names even if the packaging is in another language.\n"
                 "Return ONLY the valid JSON object, no other text."
             ),
@@ -56,13 +57,15 @@ def _identify_sync(image_bytes: bytes) -> dict:
         result = json.loads(text)
         if isinstance(result, list):
             # Fallback for old prompt style if model ignores instruction
-            return {"guesses": result, "brand": None}
+            return {"guesses": result, "brand": None, "front_text": ""}
         if isinstance(result, dict):
+            if "front_text" not in result:
+                result["front_text"] = ""
             return result
-        return {"guesses": [], "brand": None}
+        return {"guesses": [], "brand": None, "front_text": ""}
     except json.JSONDecodeError:
         print(f"[Gemini parse error] Could not parse: {text[:500]}")
-        return {"guesses": [], "brand": None}
+        return {"guesses": [], "brand": None, "front_text": ""}
 
 
 async def identify_product(image_bytes: bytes) -> dict:
