@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Camera, House, History } from 'lucide-react';
+import { Camera, House, History, Leaf } from 'lucide-react';
 
 const baseLinkClass =
   'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition';
@@ -8,8 +8,9 @@ export default function AppNav() {
   return (
     <header className="sticky top-0 z-20 h-16 border-b border-white/60 bg-white/70 backdrop-blur-md">
       <nav className="app-shell flex h-full items-center justify-between">
-        <NavLink to="/" className="hero-title text-2xl text-[var(--ink-900)]">
-          SlopScan
+        <NavLink to="/" className="hero-title inline-flex items-center gap-2 text-2xl text-[var(--ink-900)]">
+          <Leaf className="h-5 w-5 text-[var(--brand-600)]" />
+          <span>SlopScan</span>
         </NavLink>
 
         <div className="flex items-center gap-2">

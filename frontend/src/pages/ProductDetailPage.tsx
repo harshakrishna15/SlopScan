@@ -56,6 +56,8 @@ export default function ProductDetailPage() {
   const historySavedRef = useRef(false);
   const explanationCodeRef = useRef<string | undefined>(code);
   const explanationLockedToStateRef = useRef(false);
+  const explanationTextFinalizedRef = useRef(false);
+  const routeStateRef = useRef<{ product?: Product; explanation?: ExplanationResponse } | null>(null);
 
   useEffect(() => {
     if (!code) return;
@@ -63,6 +65,7 @@ export default function ProductDetailPage() {
     historySavedRef.current = false;
     explanationCodeRef.current = code;
     const state = location.state as { product?: Product; explanation?: ExplanationResponse } | null;
+    routeStateRef.current = state;
     const stateProduct = state?.product;
     const stateExplanation = state?.explanation;
     const cachedExplanation = readCachedExplanation(code);
@@ -71,6 +74,7 @@ export default function ProductDetailPage() {
     setLoading(true);
     setError(null);
     explanationLockedToStateRef.current = !!initialExplanation;
+    explanationTextFinalizedRef.current = !!initialExplanation;
     setExplanation(initialExplanation || null);
     const initialSummary = cleanExplanationText(initialExplanation?.nutrition_summary);
     const initialEco = cleanExplanationText(initialExplanation?.eco_explanation);
@@ -109,27 +113,28 @@ export default function ProductDetailPage() {
     return () => {
       canceled = true;
     };
-  }, [code, location.state]);
+  }, [code]);
 
   useEffect(() => {
     if (!code || !product) return;
     let canceled = false;
 
     // Check if explanation was already fetched (passed from ResultsPage)
-    const stateExplanation = (location.state as { explanation?: ExplanationResponse })?.explanation;
+    const stateExplanation = routeStateRef.current?.explanation;
     if (stateExplanation) {
       console.log('[ProductDetailPage] Using pre-fetched explanation from state');
       explanationLockedToStateRef.current = true;
+      explanationTextFinalizedRef.current = true;
       writeCachedExplanation(code, stateExplanation);
       setExplanation(stateExplanation);
-      setLockedSummaryText((prev) => prev || cleanExplanationText(stateExplanation.nutrition_summary));
-      setLockedEcoText((prev) => prev || cleanExplanationText(stateExplanation.eco_explanation));
+      setLockedSummaryText(cleanExplanationText(stateExplanation.nutrition_summary));
+      setLockedEcoText(cleanExplanationText(stateExplanation.eco_explanation));
       return () => {
         canceled = true;
       };
     }
 
-    if (explanationLockedToStateRef.current) {
+    if (explanationLockedToStateRef.current || explanationTextFinalizedRef.current) {
       return () => {
         canceled = true;
       };
@@ -145,6 +150,7 @@ export default function ProductDetailPage() {
         if (canceled) return;
         if (explanationCodeRef.current !== code) return;
         if (explanationLockedToStateRef.current) return;
+        if (explanationTextFinalizedRef.current) return;
         console.log('[ProductDetailPage] Explanation received:', data);
         console.log('[ProductDetailPage] Predicted scores:', {
           nutriscore: data.predicted_nutriscore,
@@ -152,9 +158,10 @@ export default function ProductDetailPage() {
         });
         writeCachedExplanation(code, data);
         explanationLockedToStateRef.current = true;
+        explanationTextFinalizedRef.current = true;
         setExplanation(data);
-        setLockedSummaryText((prev) => prev || cleanExplanationText(data.nutrition_summary));
-        setLockedEcoText((prev) => prev || cleanExplanationText(data.eco_explanation));
+        setLockedSummaryText(cleanExplanationText(data.nutrition_summary));
+        setLockedEcoText(cleanExplanationText(data.eco_explanation));
       })
       .catch(() => {
         if (canceled) return;
@@ -166,7 +173,7 @@ export default function ProductDetailPage() {
     return () => {
       canceled = true;
     };
-  }, [code, product, location.state]);
+  }, [code, product]);
 
   useEffect(() => {
     if (!product || historySavedRef.current) return;
@@ -216,8 +223,8 @@ export default function ProductDetailPage() {
   }
 
   const currentExplanation = explanationCodeRef.current === code ? explanation : null;
-  const nutritionSummaryText = lockedSummaryText || cleanExplanationText(currentExplanation?.nutrition_summary);
-  const ecoExplanationText = lockedEcoText || cleanExplanationText(currentExplanation?.eco_explanation);
+  const nutritionSummaryText = lockedSummaryText;
+  const ecoExplanationText = lockedEcoText;
   const { Icon: CategoryIcon } = getUnifiedCategory(
     product.categories || '',
     product.categories_tags,
@@ -286,7 +293,6 @@ export default function ProductDetailPage() {
           <section className="surface-card fade-up rounded-2xl p-4 md:p-5">
             <h2 className="mb-2 text-lg font-semibold text-[var(--ink-900)]">Nutrition Summary</h2>
             <p
-              key={`nutrition-summary-${nutritionSummaryText || 'loading'}`}
               className="text-fade-in text-sm leading-6 text-[var(--ink-700)]"
             >
               {nutritionSummaryText || 'Generating nutrition summary...'}
@@ -296,7 +302,6 @@ export default function ProductDetailPage() {
           <section className="surface-card fade-up rounded-2xl p-4 md:p-5">
             <h2 className="mb-2 text-lg font-semibold text-[var(--ink-900)]">Eco-Score Explained</h2>
             <p
-              key={`eco-explained-${ecoExplanationText || 'loading'}`}
               className="text-fade-in text-sm leading-6 text-[var(--ink-700)]"
             >
               {ecoExplanationText || 'Generating eco-score explanation...'}
