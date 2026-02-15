@@ -152,25 +152,9 @@ export default function ProductDetailScreen() {
         </View>
       </View>
 
-      {/* Nutrition */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Nutrition per 100g</Text>
-        <NutritionTable nutrition={nutrition as any} />
-      </View>
-
       {/* Explanation */}
       {explanation ? (
         <>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Nutrition Summary</Text>
-            <Text style={styles.bodyText}>{explanation.nutrition_summary}</Text>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Eco-Score Explained</Text>
-            <Text style={styles.bodyText}>{explanation.eco_explanation}</Text>
-          </View>
-
           {explanation.ingredient_flags.length > 0 && (
             <View style={[styles.section, styles.warningCard]}>
               <View style={styles.flagHeader}>
@@ -184,6 +168,22 @@ export default function ProductDetailScreen() {
               ))}
             </View>
           )}
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nutrition Summary</Text>
+            <Text style={styles.bodyText}>{explanation.nutrition_summary}</Text>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Eco-Score Explained</Text>
+            <Text style={styles.bodyText}>{explanation.eco_explanation}</Text>
+          </View>
+
+          {/* Nutrition */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nutrition per 100g</Text>
+            <NutritionTable nutrition={nutrition as any} />
+          </View>
 
           <View style={[styles.section, styles.adviceCard]}>
             <Text style={[styles.sectionTitle, { color: Colors.success.text }]}>Advice</Text>
