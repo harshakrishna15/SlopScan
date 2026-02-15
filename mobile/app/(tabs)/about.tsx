@@ -9,7 +9,7 @@ export default function AboutTab() {
         <View style={styles.iconWrap}>
           <Ionicons name="leaf" size={48} color={Colors.brand[600]} />
         </View>
-        <Text style={styles.title}>ShelfScan</Text>
+        <Text style={styles.title}>SlopScan</Text>
         <Text style={styles.subtitle}>Scan smarter. Eat greener.</Text>
       </View>
 
@@ -24,7 +24,7 @@ export default function AboutTab() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>About</Text>
         <Text style={styles.body}>
-          ShelfScan uses Gemini AI vision to identify food products, then matches
+          SlopScan uses Gemini AI vision to identify food products, then matches
           them against the OpenFoodFacts database to show nutrition data,
           eco-scores, and suggest greener alternatives.
         </Text>

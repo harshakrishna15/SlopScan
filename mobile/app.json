@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ShelfScan",
+    "name": "SlopScan",
     "slug": "shelfscan",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,8 +16,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "ShelfScan needs camera access to scan food products.",
-        "NSPhotoLibraryUsageDescription": "ShelfScan needs photo library access to select product images."
+        "NSCameraUsageDescription": "SlopScan needs camera access to scan food products.",
+        "NSPhotoLibraryUsageDescription": "SlopScan needs photo library access to select product images."
       }
     },
     "android": {
@@ -37,13 +37,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "ShelfScan needs camera access to scan food products."
+          "cameraPermission": "SlopScan needs camera access to scan food products."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "ShelfScan needs photo library access to select product images."
+          "photosPermission": "SlopScan needs photo library access to select product images."
         }
       ]
     ]
