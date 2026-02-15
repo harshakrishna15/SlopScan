@@ -17,6 +17,7 @@ export default function ScanTab() {
   const zoomAtPinchStart = useRef(0);
 
   const pinchGesture = Gesture.Pinch()
+    .runOnJS(true)
     .onBegin(() => {
       zoomAtPinchStart.current = zoom;
     })
