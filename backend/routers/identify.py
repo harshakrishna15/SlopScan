@@ -151,9 +151,19 @@ async def identify(image: UploadFile = File(...)):
         for c in candidates
     ]
 
+    # Generate explanation for the best match to reduce API calls
+    best_match_explanation = None
+    if best_match and candidates:
+        try:
+            from routers.explain import _explain_product
+            best_match_explanation = await _explain_product(candidates[0])
+        except Exception as e:
+            print(f"[identify] WARN: Failed to generate explanation for best match: {e}")
+
     return {
         "gemini_guesses": guesses,
         "best_match": best_match,
+        "best_match_explanation": best_match_explanation,
         "candidates": candidate_list,
         "needs_confirmation": needs_confirmation,
     }

@@ -49,18 +49,33 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!code || !product) return;
 
-    // Prefer POST with full product data to avoid wrong product_code lookups.
+    // Check if explanation was already fetched (passed from ResultsPage)
+    const stateExplanation = (location.state as { explanation?: ExplanationResponse })?.explanation;
+    if (stateExplanation) {
+      console.log('[ProductDetailPage] Using pre-fetched explanation from state');
+      setExplanation(stateExplanation);
+      return;
+    }
+
+    // Otherwise fetch it
     const request = product
       ? getExplanationFromProduct(product)
       : getExplanation(code);
 
     request
-      .then(setExplanation)
+      .then((data) => {
+        console.log('[ProductDetailPage] Explanation received:', data);
+        console.log('[ProductDetailPage] Predicted scores:', {
+          nutriscore: data.predicted_nutriscore,
+          ecoscore: data.predicted_ecoscore
+        });
+        setExplanation(data);
+      })
       .catch(() => {
         // Keep product/nutrition visible even if explanation fails.
         setExplanation(null);
       });
-  }, [code, product]);
+  }, [code, product, location.state]);
 
   useEffect(() => {
     if (!product || historySavedRef.current) return;
@@ -154,12 +169,29 @@ export default function ProductDetailPage() {
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
           <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Nutri-Score</h2>
-          <EcoScoreBadge grade={product.nutriscore_grade} size="md" />
+          {(() => {
+            const dbGrade = product.nutriscore_grade === 'unknown' ? null : product.nutriscore_grade;
+            const grade = dbGrade || explanation?.predicted_nutriscore || null;
+            const predicted = !dbGrade && !!explanation?.predicted_nutriscore;
+            return <EcoScoreBadge grade={grade} size="md" predicted={predicted} />;
+          })()}
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">
           <h2 className="mb-3 text-lg font-semibold text-[var(--ink-900)]">Eco-Score</h2>
-          <EcoScoreBadge grade={product.ecoscore_grade} score={product.ecoscore_score} size="md" />
+          {(() => {
+            const dbGrade = product.ecoscore_grade === 'unknown' ? null : product.ecoscore_grade;
+            const grade = dbGrade || explanation?.predicted_ecoscore || null;
+            const predicted = !dbGrade && !!explanation?.predicted_ecoscore;
+            return (
+              <EcoScoreBadge
+                grade={grade}
+                score={product.ecoscore_score}
+                size="md"
+                predicted={predicted}
+              />
+            );
+          })()}
         </section>
 
         <section className="surface-card fade-up mx-auto w-full max-w-4xl rounded-2xl p-4 md:p-5">

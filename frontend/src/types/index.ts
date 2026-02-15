@@ -24,6 +24,7 @@ export interface IdentifyResponse {
     confidence: number;
     ecoscore_grade: string | null;
   } | null;
+  best_match_explanation?: ExplanationResponse | null;
   candidates: Array<Product & { confidence: number }>;
   needs_confirmation: boolean;
 }
@@ -33,6 +34,8 @@ export interface ExplanationResponse {
   eco_explanation: string;
   ingredient_flags: string[];
   advice: string;
+  predicted_nutriscore?: string | null;
+  predicted_ecoscore?: string | null;
 }
 
 export interface ScanHistoryEntry {

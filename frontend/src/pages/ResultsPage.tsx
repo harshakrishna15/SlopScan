@@ -35,7 +35,14 @@ export default function ResultsPage() {
           const capturedImage = sessionStorage.getItem('capturedImage') || undefined;
           navigate(`/product/${data.best_match.product_code}`, {
             replace: true,
+<<<<<<< HEAD
             state: { product: data.candidates[0], capturedImage },
+=======
+            state: {
+              product: data.candidates[0],
+              explanation: data.best_match_explanation
+            },
+>>>>>>> 91627b8e8d19332997ead441dc34507358a64683
           });
         }
       })
