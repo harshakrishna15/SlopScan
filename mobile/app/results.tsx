@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { identifyProduct } from '../lib/api';
-import { storeProduct } from '../lib/store';
+import { storeProduct, storeCategoryIcon } from '../lib/store';
 import type { IdentifyResponse } from '../lib/types';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ProductCard from '../components/ProductCard';
@@ -24,6 +24,9 @@ export default function ResultsScreen() {
     identifyProduct(imageUri)
       .then((data) => {
         setResult(data);
+        if (data.category_icon) {
+          storeCategoryIcon(data.category_icon);
+        }
         // Auto-navigate if confident match
         if (!data.needs_confirmation && data.best_match && data.candidates.length > 0) {
           const product = data.candidates[0];
@@ -87,6 +90,7 @@ export default function ResultsScreen() {
             confidence={c.confidence}
             image_url={c.image_url}
             fullProduct={c}
+            categoryIcon={result.category_icon}
           />
         ))}
       </View>

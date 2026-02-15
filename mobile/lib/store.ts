@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Product, ExplanationResponse } from './types';
+import type { Product, ExplanationResponse, CategoryIcon } from './types';
 
 // Simple in-memory store for passing objects between screens.
 // Router params should be serializable strings; complex objects go here.
@@ -25,6 +25,14 @@ export function storeProduct(code: string, product: Product) {
 
 export function getStoredProduct(code: string): Product | undefined {
   return get<Product>(`product:${code}`);
+}
+
+export function storeCategoryIcon(icon: CategoryIcon) {
+  set('category_icon', icon);
+}
+
+export function getCategoryIcon(): CategoryIcon | undefined {
+  return get<CategoryIcon>('category_icon');
 }
 
 // Persistent explanation cache (AsyncStorage)

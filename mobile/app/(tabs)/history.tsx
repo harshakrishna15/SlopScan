@@ -77,7 +77,11 @@ export default function HistoryTab() {
           />
         ) : (
           <View style={styles.placeholder}>
-            <Ionicons name="cube-outline" size={24} color={Colors.ink[400]} />
+            <Ionicons
+              name={item.category_icon ? `${item.category_icon}-outline` as any : 'cube-outline'}
+              size={24}
+              color={Colors.ink[400]}
+            />
           </View>
         )}
         <View style={styles.info}>

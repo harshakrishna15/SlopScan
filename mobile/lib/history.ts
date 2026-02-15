@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ScanHistoryEntry, Product } from './types';
+import { getCategoryIcon } from './store';
 
 const SCAN_HISTORY_KEY = 'shelfscan_scan_history';
 const MAX_HISTORY_ITEMS = 30;
@@ -31,6 +32,7 @@ export async function saveScanHistory(product: Product): Promise<void> {
     nutriscore_grade: product.nutriscore_grade,
     product_image_url: product.image_url,
     product,
+    category_icon: getCategoryIcon(),
   };
   const next = [entry, ...filtered].slice(0, MAX_HISTORY_ITEMS);
   await AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(next));

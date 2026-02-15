@@ -15,6 +15,10 @@ export interface Product {
   similarity_score?: number;
 }
 
+export type CategoryIcon =
+  | 'pizza' | 'cafe' | 'beer' | 'wine' | 'fish' | 'nutrition' | 'restaurant'
+  | 'fast-food' | 'ice-cream' | 'water' | 'egg' | 'leaf' | 'flower' | 'basket' | 'cart';
+
 export interface IdentifyResponse {
   gemini_guesses: string[];
   best_match: {
@@ -27,6 +31,7 @@ export interface IdentifyResponse {
   best_match_explanation?: ExplanationResponse | null;
   candidates: Array<Product & { confidence: number }>;
   needs_confirmation: boolean;
+  category_icon?: CategoryIcon;
 }
 
 export interface ExplanationResponse {
@@ -49,4 +54,5 @@ export interface ScanHistoryEntry {
   ecoscore_score: number | null;
   product_image_url: string | null;
   product?: Product;
+  category_icon?: CategoryIcon;
 }

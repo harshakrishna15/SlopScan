@@ -40,10 +40,15 @@ def _identify_sync(image_bytes: bytes) -> dict:
             },
             (
                 "You are a food product identifier. Look at this photo of a food product package. "
-                "Return a JSON object with two fields:\n"
+                "Return a JSON object with three fields:\n"
                 "1. 'guesses': A JSON array of 3-5 possible product names (including brand) IN ENGLISH, from most to least likely.\n"
                 "2. 'brand': The most likely brand name detected (e.g. 'Coca-Cola', 'Nestle') IN ENGLISH.\n"
-                'Example: {"guesses": ["Nutella Hazelnut Spread", "Nutella & Go"], "brand": "Ferrero"}\n'
+                "3. 'category_icon': Pick exactly ONE icon name that best represents this product's food category from this list: "
+                "pizza, cafe, beer, wine, fish, nutrition, restaurant, fast-food, ice-cream, water, egg, leaf, flower, basket, cart. "
+                "Use 'nutrition' for general food/snacks, 'cafe' for coffee/tea, 'water' for drinks/beverages, "
+                "'ice-cream' for frozen desserts/dairy, 'egg' for breakfast/bakery items, 'leaf' for health/organic products, "
+                "'basket' if nothing else fits.\n"
+                'Example: {"guesses": ["Nutella Hazelnut Spread", "Nutella & Go"], "brand": "Ferrero", "category_icon": "nutrition"}\n'
                 "Prioritize English names even if the packaging is in another language.\n"
                 "Return ONLY the valid JSON object, no other text."
             ),

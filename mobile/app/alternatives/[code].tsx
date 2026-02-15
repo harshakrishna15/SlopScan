@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getRecommendations, getRecommendationsFromProduct } from '../../lib/api';
-import { getStoredProduct } from '../../lib/store';
+import { getStoredProduct, getCategoryIcon } from '../../lib/store';
 import type { Product } from '../../lib/types';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import ProductCard from '../../components/ProductCard';
@@ -66,6 +66,7 @@ export default function AlternativesScreen() {
               confidence={alt.similarity_score}
               image_url={alt.image_url}
               fullProduct={alt}
+              categoryIcon={getCategoryIcon()}
             />
           ))}
         </View>

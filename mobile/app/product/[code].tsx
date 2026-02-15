@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getProduct, getExplanation, getExplanationFromProduct } from '../../lib/api';
-import { getStoredProduct, storeProduct, getPersistedExplanation, storeExplanation } from '../../lib/store';
+import { getStoredProduct, storeProduct, getPersistedExplanation, storeExplanation, getCategoryIcon } from '../../lib/store';
 import { saveScanHistory } from '../../lib/history';
 import type { Product, ExplanationResponse } from '../../lib/types';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -121,7 +121,11 @@ export default function ProductDetailScreen() {
             />
           ) : (
             <View style={styles.productPlaceholder}>
-              <Text style={styles.productPlaceholderText}>P</Text>
+              {getCategoryIcon() ? (
+                <Ionicons name={`${getCategoryIcon()}-outline` as any} size={36} color={Colors.ink[500]} />
+              ) : (
+                <Text style={styles.productPlaceholderText}>P</Text>
+              )}
             </View>
           )}
           <View style={styles.headerInfo}>

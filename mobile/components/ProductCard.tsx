@@ -1,7 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import type { Product } from '../lib/types';
+import { Ionicons } from '@expo/vector-icons';
+import type { Product, CategoryIcon } from '../lib/types';
 import { storeProduct } from '../lib/store';
 import EcoScoreBadge from './EcoScoreBadge';
 import { Colors } from '../constants/colors';
@@ -15,6 +16,7 @@ interface Props {
   confidence?: number;
   image_url?: string | null;
   fullProduct?: Product;
+  categoryIcon?: CategoryIcon;
 }
 
 export default function ProductCard({
@@ -26,6 +28,7 @@ export default function ProductCard({
   confidence,
   image_url,
   fullProduct,
+  categoryIcon,
 }: Props) {
   const router = useRouter();
 
@@ -48,7 +51,11 @@ export default function ProductCard({
         />
       ) : (
         <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>P</Text>
+          {categoryIcon ? (
+            <Ionicons name={`${categoryIcon}-outline` as any} size={26} color={Colors.ink[500]} />
+          ) : (
+            <Text style={styles.placeholderText}>P</Text>
+          )}
         </View>
       )}
       <View style={styles.info}>

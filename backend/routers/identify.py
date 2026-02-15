@@ -17,6 +17,7 @@ async def identify(image: UploadFile = File(...), skip_explanation: bool = Query
         gemini_result = await gemini.identify_product(image_bytes)
         guesses = gemini_result.get("guesses", [])
         gemini_brand = gemini_result.get("brand")
+        category_icon = gemini_result.get("category_icon", "basket")
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -166,4 +167,5 @@ async def identify(image: UploadFile = File(...), skip_explanation: bool = Query
         "best_match_explanation": best_match_explanation,
         "candidates": candidate_list,
         "needs_confirmation": needs_confirmation,
+        "category_icon": category_icon,
     }
