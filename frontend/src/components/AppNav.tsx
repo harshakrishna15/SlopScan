@@ -9,7 +9,7 @@ export default function AppNav() {
     <header className="sticky top-0 z-20 h-16 border-b border-white/60 bg-white/70 backdrop-blur-md">
       <nav className="app-shell flex h-full items-center justify-between">
         <NavLink to="/" className="hero-title text-2xl text-[var(--ink-900)]">
-          ShelfScan
+          SlopScan
         </NavLink>
 
         <div className="flex items-center gap-2">

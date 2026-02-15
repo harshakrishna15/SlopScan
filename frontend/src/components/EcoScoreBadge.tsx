@@ -1,16 +1,16 @@
 const COLORS: Record<string, string> = {
-  a: 'bg-[#1E8F4E] text-white',
-  b: 'bg-[#4DA924] text-white',
-  c: 'bg-[#DEB314] text-[#3f3200]',
-  d: 'bg-[#F6832A] text-white',
-  e: 'bg-[#DC4A1F] text-white',
+  a: 'text-[#1E8F4E]',
+  b: 'text-[#4DA924]',
+  c: 'text-[#B78D00]',
+  d: 'text-[#F6832A]',
+  e: 'text-[#DC4A1F]',
 };
 
 export default function EcoScoreBadge({
   grade,
-  score,
+  score: _score,
   size = 'md',
-  predicted = false,
+  predicted: _predicted = false,
 }: {
   grade: string | null;
   score?: number | null;
@@ -18,27 +18,21 @@ export default function EcoScoreBadge({
   predicted?: boolean;
 }) {
   if (!grade) {
-    return (
-      <span className="inline-flex items-center rounded-full border border-[var(--line-soft)] bg-[#f0f4ef] px-2.5 py-0.5 text-xs font-semibold text-[var(--ink-500)]">
-        N/A
-      </span>
-    );
+    return <span className="font-semibold text-[var(--ink-500)]">N/A</span>;
   }
 
   const g = grade.toLowerCase();
-  const colorClass = COLORS[g] || 'bg-gray-200 text-gray-600';
+  const colorClass = COLORS[g] || 'text-gray-600';
 
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-xs',
-    md: 'px-3 py-1 text-sm',
-    lg: 'px-4 py-1.5 text-base',
+    sm: 'text-lg',
+    md: 'text-3xl',
+    lg: 'text-4xl',
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border border-black/5 font-extrabold uppercase shadow-sm ${colorClass} ${sizeClasses[size]}`}>
+    <span className={`font-extrabold uppercase ${colorClass} ${sizeClasses[size]}`}>
       {g}
-      {score != null && <span className="font-normal opacity-80">({score})</span>}
-      {predicted && <span className="ml-1 text-xs font-normal opacity-90" title="AI predicted score based on ingredients and nutrition">🤖</span>}
     </span>
   );
 }

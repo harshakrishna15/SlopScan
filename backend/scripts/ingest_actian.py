@@ -65,6 +65,8 @@ def main():
                     "brands": p.get("brands", ""),
                     "categories": p.get("categories", ""),
                     "categories_tags": json.dumps(p.get("categories_tags", [])),
+                    "nutriscore_grade": p.get("nutriscore_grade"),
+                    "nutriscore_score": p.get("nutriscore_score"),
                     "ecoscore_grade": p.get("ecoscore_grade"),
                     "ecoscore_score": p.get("ecoscore_score"),
                     "packaging_tags": json.dumps(p.get("packaging_tags", [])),

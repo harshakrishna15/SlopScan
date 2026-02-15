@@ -1,4 +1,4 @@
-# ShelfScan
+# SlopScan
 
 Scan a food product photo to see its nutrition, eco-score, and greener alternatives. Built with React, FastAPI, Gemini Vision, and Actian VectorDB.
 

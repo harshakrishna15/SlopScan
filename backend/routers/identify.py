@@ -197,6 +197,7 @@ async def identify(image: UploadFile = File(...)):
             "product_name": top.get("product_name"),
             "brands": top.get("brands"),
             "confidence": confidence,
+            "nutriscore_grade": top.get("nutriscore_grade"),
             "ecoscore_grade": top.get("ecoscore_grade"),
         }
         needs_confirmation = confidence < CONFIDENCE_THRESHOLD
@@ -207,6 +208,8 @@ async def identify(image: UploadFile = File(...)):
             "product_name": c.get("product_name"),
             "brands": c.get("brands"),
             "confidence": c.get("similarity_score", 0),
+            "nutriscore_grade": c.get("nutriscore_grade"),
+            "nutriscore_score": c.get("nutriscore_score"),
             "ecoscore_grade": c.get("ecoscore_grade"),
             "ecoscore_score": c.get("ecoscore_score"),
             "categories": c.get("categories"),

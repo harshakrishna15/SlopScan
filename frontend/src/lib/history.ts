@@ -1,6 +1,6 @@
 import type { ScanHistoryEntry, Product } from '../types';
 
-const SCAN_HISTORY_KEY = 'shelfscan_scan_history';
+const SCAN_HISTORY_KEY = 'slopscan_scan_history';
 const MAX_HISTORY_ITEMS = 30;
 
 export function getScanHistory(): ScanHistoryEntry[] {
