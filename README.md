@@ -2,6 +2,8 @@
 
 Scan a food product photo to see its nutrition, eco-score, and greener alternatives. Built with React, FastAPI, Gemini Vision, and Actian VectorDB.
 
+[Shipyard Post](https://shipyardhq.tech/projects/679f07e0-429c-4460-be24-709df9d841ac) | [Demo Video](https://www.youtube.com/watch?v=Kl7DxFP4Qrc)
+
 ## What is This?
 
 SlopScan is a web app that helps you make smarter food choices. Point your camera at any food product, and it will:
