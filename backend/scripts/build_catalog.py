@@ -15,12 +15,7 @@ from datasets import load_dataset
 
 
 OUTPUT_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "catalog.json")
-<<<<<<< HEAD
-TARGET_COUNT = 500000
-=======
 TARGET_COUNT = 10_000
->>>>>>> 82c38b5be9b637c47226f3a68b85d72ffcc92479
-
 
 def _to_str(val) -> str:
     """Convert a value to a clean string. Handles the OpenFoodFacts format
